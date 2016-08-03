@@ -618,19 +618,19 @@ def validate(document, parsed_query,functionDic): # Need to write
             if matchword[feature].lower() in lower_text:
                 continue
         results = functionDic[feature](document)
-        if results:
-            isValid = False
-            for result in results:
-                if fuzz.ratio(str(result),matchword[feature])>=80:
-                    isValid = True
-                    break
-            if isValid:
-                continue
-            else:
-                return False
-        else:
-            return False
-    return True
+    #     if results:
+    #         isValid = False
+    #         for result in results:
+    #             if fuzz.ratio(str(result),matchword[feature])>=80:
+    #                 isValid = True
+    #                 break
+    #         if isValid:
+    #             continue
+    #         else:
+    #             return False
+    #     else:
+    #         return False
+    # return True
 
 def answer_extraction(document,parsed_query_dic,functionDic):
     extraction_result = {}
@@ -837,28 +837,31 @@ def main():
     answer_dic = []
     output_answer = "answer.txt"
     for query in query_list:
-        result = []
-        parsed_query_dic = search.query_parse(query)
-        #print(parsed_query_dic)
-        if query["type"] == "cluster":
-            result = cluster(query,5)
-        else:
+        if query["id"] =="1595":
+            result = []
             parsed_query_dic = search.query_parse(query)
+            # if query["type"] == "cluster":
+            #     result = cluster(query,5)
+            # else:
+            #parsed_query_dic = search.query_parse(query)
             query_body = search.query_body_build(parsed_query_dic)
+            print(query_body)
             documents = search.elastic_search(query_body)
+            print(len(documents))
             for document in documents:
                 if validate(document,parsed_query_dic,functionDic):
-                    answer = answer_extraction(document,parsed_query_dic,functionDic)
-                    if len(answer)>0:
-                        dic = {}
-                        dic["id"] = document["_id"]
-                        dic.update(answer)
-                        result.append(dic)
-        final_result = generate_formal_answer(query,result)
-        answer_dic.append(final_result)
-    f = open(output_answer,"w")
-    f.write(str(answer_dic))
-    f.close()
+                    print(True)
+    #                 answer = answer_extraction(document,parsed_query_dic,functionDic)
+    #                 if len(answer)>0:
+    #                     dic = {}
+    #                     dic["id"] = document["_id"]
+    #                     dic.update(answer)
+    #                     result.append(dic)
+    #         final_result = generate_formal_answer(query,result)
+    #         answer_dic.append(final_result)
+    # f = open(output_answer,"w")
+    # f.write(str(answer_dic))
+    # f.close()
 
 if __name__ == "__main__":
     main()

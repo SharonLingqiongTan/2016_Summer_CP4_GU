@@ -153,8 +153,8 @@ def query_body_build(parsed_query):
         query_string_dic["query"] = word
         query_dic["query_string"] = query_string_dic
         should_arr.append(query_dic)
-    size = 100
-    body = {"size":100,"query":{"bool":{"must":{"match":{"extracted_text": must_str}}, "must_not":{"match": {"extracted_text": must_not_str}}, "should": should_arr}}}
+    size = 10
+    body = {"size":size,"query":{"bool":{"must":{"match":{"extracted_text": must_str}}, "must_not":{"match": {"extracted_text": must_not_str}}, "should": should_arr}}}
     return body
 
 def elastic_search(query_body):
