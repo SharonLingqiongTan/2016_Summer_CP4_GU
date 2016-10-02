@@ -43,6 +43,24 @@ def query_parse(query):
                     must_search_field["ethnicity"] = clause["constraint"]
             elif predicate == "drug_use":
                 should_search_field["drug_use"] = "drug"
+            elif predicate == "location":
+                location = clause["constraint"].split(",")
+                if location:
+                    should_search_field["location"] = clause["constraint"]
+                    if len(location)>1:
+                        nationality_filepath = "./resource/nationality"
+                        with open(nationality_filepath) as f:
+                            nationality_list = ','.join(f.readlines()).split(",")
+                            f.close()
+                            if location[1].lower().capitalize() in nationality_list:
+                                country = location[1]
+                                if location[1].lower() == "thailand":
+                                    country = "thai"
+                                must_search_field["location"] = location[0]+" AND "+country
+                            else:
+                                must_search_field["location"] = location[0]
+                    else:
+                        must_search_field["location"] = location[0]
             elif predicate == "seed":
                 if "@" in clause["constraint"]:
                     must_search_field["email"] = clause["constraint"]
@@ -68,6 +86,10 @@ def query_parse(query):
                         must_search_field[predicate] = "hair"
                     if predicate == "eye_color":
                         must_search_field[predicate] = "hair"
+                    if predicate == "ethnicity":
+                        should_search_field[predicate] = "ethnicity"
+                    if predicate == "review_site":
+                        should_search_field[predicate] = "review"
                     answer_field[predicate] = clause["variable"]
     #filters
     if filters:
@@ -89,10 +111,10 @@ def query_parse(query):
             for variable in filter_dic:
                 for key,value in answer_field.items():
                     if value == variable:
-                        del answer_field[key]
                         if filter_dic[variable]["operator"] == "!=":
                             must_not_field[key] = filter_dic[variable]["content"]
                         elif filter_dic[variable]["operator"] == "=":
+                            del answer_field[key]
                             must_search_field[key] = filter_dic[variable]["content"]
                             required_match_field[key] = filter_dic[variable]["content"].split(operator)
     parsed_dic["must_search_field"] = must_search_field
@@ -116,6 +138,8 @@ def query_body_build(parsed_query):
             must_list.append(must_search_dic[condition][:3])
             must_list.append(must_search_dic[condition][3:6])
             must_list.append(must_search_dic[condition][6:])
+            should_list.append(must_search_dic[condition])
+            should_list.append(must_search_dic[condition][:3]+"-"+must_search_dic[condition][3:6]+"-"+must_search_dic[condition][6:])
         elif condition == "posting_date":
             calendar = must_search_dic[condition].split("-")
             if len(calendar) == 3: #year,month,day are all included
@@ -143,40 +167,38 @@ def query_body_build(parsed_query):
 
     for condition in must_not_dic:
         must_not_list.append(must_not_dic[condition])
-
     should_arr = []
     must_str = " AND ".join(must_list)
     must_not_str = " AND ".join(must_not_list)
     for word in should_list:
         query_dic = {}
-        query_string_dic = {}
-        query_string_dic["query"] = word
-        query_dic["query_string"] = query_string_dic
+        query_dic["match"] = {}
+        query_dic["match"]["raw_content"] = word
         should_arr.append(query_dic)
-    size = 10
-    body = {"size":size,"query":{"bool":{"must":{"match":{"extracted_text": must_str}}, "must_not":{"match": {"extracted_text": must_not_str}}, "should": should_arr}}}
+    size = 1000
+    body = {"size":size,"query":{"bool":{"must":{"match":{"raw_content": must_str}}, "must_not":[{"match": {"extracted_text": must_not_str}},{"match": {"raw_content": must_not_str}}], "should": should_arr}}}
     return body
 
 def elastic_search(query_body):
     es = Elasticsearch(
         ['https://cdr-es.istresearch.com:9200/memex-qpr-cp4-2'],
-        http_auth=('cdr-memex', 's7Zhd71r3VD8ojRj'),
+        http_auth=('cdr-memex', '5OaYUNBhjO68O7Pn'),
         port=9200,
         use_ssl=True,
         verify_certs = True,
         ca_certs=certifi.where(),
     )
-    response = es.search(body=query_body)
+    response = es.search(body=query_body,request_timeout=60)
     documents = response["hits"]["hits"]
     return documents
 
 def annotation(text):
-    f = open("tmp.txt","w")
+    f = open("tmp2.txt","w")
     f.write(text)
     f.close()
-    inputPath = "tmp.txt"
+    inputPath = "tmp2.txt"
     shell_cmd = "java -mx600m -cp \"stanford-ner-2015-12-09/*:stanford-ner-2015-12-09/lib/*\" edu.stanford.nlp.ie.crf.CRFClassifier -loadClassifier stanford-ner-2015-12-09/classifiers/english.all.3class.distsim.crf.ser.gz -outputFormat inlineXML -textFile %s" % inputPath
     annotated_text = os.popen(shell_cmd).read()
-    os.system("rm \"tmp.txt\"")
+    os.system("rm \"tmp2.txt\"")
     return annotated_text
 
