@@ -1331,8 +1331,5 @@ else:
                    "location":location_recognition,"posting_date":posting_date_recognition,"price":price_recognition,"number_of_individuals": number_of_individuals_recognition,
                    "gender":gender_recognition,"review_id":review_id_recognition,"title":title_recognition,"business":business_recognition,"business_type":business_type_recognition,
                    "business_name":business_name_recognition,"services":services_recognition,"hyperlink":hyperlink_recognition,"drug_use":drug_use_recognition,
-                   "multiple_phone":multiple_phone_recognition,"top_level_domain":top_level_domain_recognition,"image_with_phone":image_with_phone_recognition,
-                   "image_with_email":image_with_email_recognition,"obfuscation":obfuscation_recognition,"image_with_review_id":image_with_review_id_recognition,
-                   "image_with_tattoo":image_with_tattoo_recognition,"image_in_hotel_motel_room":image_in_hotel_motel_room_recognition,
-                   "image_without_professional_lighting":image_without_professional_lighting_recognition
+                   "multiple_phone":multiple_phone_recognition,"top_level_domain":top_level_domain_recognition
                    }

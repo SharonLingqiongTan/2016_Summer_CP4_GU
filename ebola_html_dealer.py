@@ -195,10 +195,6 @@ def make_clean_html(raw, stream_item=None):
 
     return _clean_html
 
-f = open("text")
-lines = f.readlines()[0]
-w = open("output.txt","w")
-w.write(make_clean_html(lines))
 # count = 0
 # for filename in os.listdir('./tweets_unreduced/'):
 #     fh = open('./tweets_unreduced/' + filename,'rb')
