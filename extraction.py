@@ -308,6 +308,7 @@ def eye_color_recognition(document,is_raw_content):
     #     return text_result
     # else:
     #     return raw_content_result
+    return text_result
 
 def nationality_recognition(document,is_raw_content):
     text = ""
@@ -370,7 +371,7 @@ def review_site_recognition(document,is_raw_content):
         text = get_text(document)
     review_site_list = ["eccie", "TER", "preferred411", "eccie.net", "theeroticreview",]
     review_site = []
-    hyperlinks = hyperlink_recognition(document)
+    hyperlinks = hyperlink_recognition(document,is_raw_content)
     if hyperlinks:
         for link in hyperlinks:
             for site in review_site_list:
@@ -613,16 +614,17 @@ def number_of_individuals_recognition(document,is_raw_content):
         text = get_text(document)
     if "twin" in text:
         return [2]
-    names = name_recognition(document)
+    names = name_recognition(document,is_raw_content)
     for i in range(len(names)):
         names[i] = result_normalize(names[i])
     names = list(set(names))
-    eye_colors = eye_color_recognition(document)
-    hair_colors = hair_color_recognition(document)
-    ages = age_recognition(document)
-    nationalities = nationality_recognition(document)
-    ethnicities = ethnicity_recognition(document)
+    eye_colors = eye_color_recognition(document,is_raw_content)
+    hair_colors = hair_color_recognition(document,is_raw_content)
+    ages = age_recognition(document,is_raw_content)
+    nationalities = nationality_recognition(document,is_raw_content)
+    ethnicities = ethnicity_recognition(document,is_raw_content)
     number_list = [names,eye_colors,hair_colors,ages,nationalities,ethnicities]
+    print(number_list)
     number_list.sort(key=lambda k:len(k))
     result = 0
     for item in number_list:
@@ -645,16 +647,17 @@ def title_recognition(document,is_raw_content):
     if "extractions" in document["_source"]:
         crawl_extractions = document["_source"]["extractions"]
         if "title" in crawl_extractions:
-            result = crawl_extractions["title"]["results"][:]
-            for i in range(len(result)):
-                result[i] = result_normalize(result[i])
+            if "results" in crawl_extractions["title"]:
+                result = crawl_extractions["title"]["results"][:]
+                for i in range(len(result)):
+                    result[i] = result_normalize(result[i])
     return result
 
 def business_recognition(document,is_raw_content):
     text = get_text(document)
     business = []
-    business_name = business_name_recognition(document)
-    business_address = physical_address_recognition(document)
+    business_name = business_name_recognition(document,is_raw_content)
+    business_address = physical_address_recognition(document,is_raw_content)
     if business_name:
         for name in business_name:
             name = result_normalize(name)
@@ -730,7 +733,7 @@ def drug_use_recognition(document,is_raw_content):
     for i in range(len(words)):
         if fuzz.ratio(words[i].lower(),"drug")>=80:
             drug_use = "true"
-            for word in words[i-3,i+4]:
+            for word in words[i-3:i+4]:
                 if word.lower == "no":
                     result.append("false")
                     drug_use = "false"
