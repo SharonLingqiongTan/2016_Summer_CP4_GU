@@ -159,7 +159,7 @@ def make_clean_html(raw, stream_item=None):
         if 'with encoding declaration' in str(exc):
             root = lxml.html.document_fromstring(raw)
         else:
-            raise
+            return ""
     # if that worked, then we will be able to generate a
     # valid HTML string
     fixed_html = lxml.html.tostring(root, encoding=unicode)
@@ -214,5 +214,6 @@ def make_clean_html(raw, stream_item=None):
 #     fh.close()
 #     dh.close()
 #     count += 1
+
 
 
