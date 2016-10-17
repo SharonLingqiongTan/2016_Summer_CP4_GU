@@ -128,7 +128,6 @@ def drop_invalid_and_upper_utf8_chars(possibly_invalid_string):
     return re.sub(ur'[^\t\r\n\u0020-\ud7ff\ue000-\ufffd]', u' ',
                   possibly_invalid_string)
 
-
 def make_clean_html(raw, stream_item=None):
     '''Get a clean text representation of presumed HTML.
     Treat `raw` as though it is HTML, even if we have no idea what it
@@ -155,11 +154,11 @@ def make_clean_html(raw, stream_item=None):
     # default attempt uses vanilla lxml.html
     try:
         root = lxml.html.document_fromstring(raw_decoded)
-    except ValueError, exc:
-        if 'with encoding declaration' in str(exc):
-            root = lxml.html.document_fromstring(raw)
-        else:
-            return ""
+    except Exception as e:
+        # if 'with encoding declaration' in str(exc):
+        #     root = lxml.html.document_fromstring(raw)
+        # else:
+        return ""
     # if that worked, then we will be able to generate a
     # valid HTML string
     fixed_html = lxml.html.tostring(root, encoding=unicode)

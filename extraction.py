@@ -6,6 +6,21 @@ from datetime import date,timedelta
 import ebola_html_dealer as html_cleaner
 
 
+def get_text(document):
+    if "extracted_text" in document["_source"]:
+        extract_text = document["_source"]["extracted_text"]
+        if extract_text:
+            return extract_text
+    try:
+        extract_text = html_cleaner.make_clean_html(get_raw_content(document))
+    except Exception as e:
+        extract_text = ""
+    document["_source"]["extracted_text"] = extract_text
+    return extract_text
+
+def get_raw_content(document):
+    return document["_source"]["raw_content"]
+
 #Feature_list [1:is_extract_text,2:is_meta_data,3:raw_content_match percentage, 4:extracted_text_match percentage 5:meta_data_match percentage
 #6:raw_content_len, 7:extract_len, 8:match_frequency, 9:elastic_score, 10:raw_content_ave_distance, 11:extract_text_ave_dis
 def is_extract_text(document):
@@ -54,21 +69,143 @@ def write_feature_score(feature_dic,query_id,document_id):
     return feature
 
 #extraction
+#features: phone,email,street address, social media ID, review site ID, name, location, age, nationality/Ethnicity, price, tattoos, multiple provides, hair color, services, height, weight, eyecolor
 
-def get_text(document):
-    if "extracted_text" in document["_source"]:
-        extract_text = document["_source"]["extracted_text"]
-        if extract_text:
-            return extract_text
-    try:
-        extract_text = html_cleaner.make_clean_html(get_raw_content(document))
-    except Exception as e:
-        extract_text = ""
-    document["_source"]["extracted_text"] = extract_text
-    return extract_text
+def phone_recognition(document,is_raw_content):
+    text = ""
+    if is_raw_content:
+        text = get_raw_content(document)
+    else:
+        text = get_text(document)
+    number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)"
+    text_result = re.findall(number_pattern,text)
+    result = []
+    for item in text_result:
+        result.append("".join(item))
+    return result
 
-def get_raw_content(document):
-    return document["_source"]["raw_content"]
+def email_recognition(document,is_raw_content):
+    text = ""
+    if is_raw_content:
+        text = get_raw_content(document)
+    else:
+        text = get_text(document)
+    regex = re.compile(("([a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`"
+                    "{|}~-]+)*(@|\sat\s)(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(\.|"
+                    "\sdot\s))+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)"))
+    result = []
+    text_result = re.findall(regex,text)
+    for email in text_result:
+        if not email[0].startswith('//'):
+            result.append(email[0].lower())
+    return result
+
+def physical_address_recognition(document,is_raw_content):
+    text = ""
+    if is_raw_content:
+        text = get_raw_content(document)
+    else:
+        text = get_text(document)
+    text_without_quotation = re.sub(r'[^\w\s]','',text)
+    streetNumber = "([1-9][0-9]{1,3} )"
+    nsew = "(((N|S|E|W|North|South|East|West|NW|NE|SW|SE) )?)"
+    nsewString = "North|South|East|West|NW|NE|SW|SE|"
+    streetTypeString = "Street|St|ST|Boulevard|Blvd|Lane|Ln|Road|Rd|Avenue|Ave|Circle|Cir|Cove|Cv|Drive|Dr|Parkway|Pkwy|Court|Ct|Square|Sq|Loop|Lp|"
+    roomString = "Suite|suite|Ste|ste|Apt|apt|Apartment|apartment|Room|room|Rm|rm|#|suitenumber"
+    streetName_pattern1 = r"(((?!(?:"+nsewString+streetTypeString+roomString+r")\b)[A-Z][a-z]+(?: (?!(?:"+nsewString+streetTypeString+roomString+r")\b)[A-Z][a-z]+){0,2})|((\d+)(st|ST|nd|ND|rd|RD|th|TH)))"
+    #streetName_pattern2 = r"((\d+)(st|ST|nd|ND|rd|RD|th|TH))"
+    streetName = streetName_pattern1 #+ "|" + streetName_pattern2
+    #streetName = "((?!(?:Apt)\b)[A-Z][a-z]+(?: (?!(?:Apt)\b)[A-Z][a-z]+){0,2})"
+    streetType = "((Street|St|ST|Boulevard|Blvd|Lane|Ln|Road|Rd|Avenue|Ave|Circle|Cir|Cove|Cv|Drive|Dr|Parkway|Pkwy|Court|Ct|Square|Sq|Loop|Lp) )?"
+    room = "(((Suite|suite|Ste|ste|Apt|apt|Apartment|apartment|Room|room|Rm|rm|#|suitenumber) ([0-9]{1,4}([A-Za-z]?)) )?)"
+    city_state = "((((([A-Z][a-z]+)|([A-Z]+)) ){1,2}[A-Z]{2} )?)"
+    zip_code = "([0-9]{5} )?"
+    addree_pattern = re.compile(r"("+streetNumber+nsew+streetName_pattern1+" "+streetType+nsew+room+city_state+zip_code+")")
+    text_result= re.findall(addree_pattern,text_without_quotation)
+    result = []
+    for item in text_result:
+        address_parts = item[0].split()
+        if len(address_parts)>2:   #although only street number and streeName are required in the pattern, address consists of at least three parts.
+            isValid = False
+            for part in address_parts:
+                if part.lower() in streetTypeString.lower() or part.lower() in nsew.lower():
+                    isValid = True
+            if isValid:
+                result.append(result_normalize(item[0]))
+    return result
+
+def social_media_ID(document,is_raw_content):
+    return ""
+
+def review_site_recognition(document,is_raw_content):
+    #url_pattern = re.compile(r'(http[s]?://)|(www.)(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+    text = ""
+    if is_raw_content:
+        text = get_raw_content(document)
+    else:
+        text = get_text(document)
+    review_site_list = ["eccie", "TER", "preferred411"]
+    review_site = []
+    hyperlinks = hyperlink_recognition(document,is_raw_content)
+    if hyperlinks:
+        for link in hyperlinks:
+            for site in review_site_list:
+                if site in link:
+                    if site == "eccie.net":
+                        site = "eccie"
+                    if site == "theeroticreview":
+                        site = "TER"
+                    review_site.append(site)
+    return review_site
+
+def name_recognition(document,is_raw_content):
+    annotated_text = ""
+    if is_raw_content:
+        annotated_text = document["annotated_raw_content"]
+    else:
+        annotated_text = document["annotated_clean_content"]
+    name_pattern = re.compile(r"\<PERSON\>(.*?)\</PERSON>")
+    name_pattern_result = re.findall(name_pattern,annotated_text)
+    result = []
+    if len(name_pattern_result)>0:
+        for item in name_pattern_result:
+            result.append(result_normalize(item))
+    return result
+
+def location_recognition(document,is_raw_content):
+    # text = ""
+    # if is_raw_content:
+    #     text = get_raw_content(document)
+    # else:
+    #     text = get_text(document)
+    annotated_text = ""
+    if is_raw_content:
+        annotated_text = document["annotated_raw_content"]
+    else:
+        annotated_text = document["annotated_clean_content"]
+    location_arr = re.findall(r"\<LOCATION\>(.*?)\</LOCATION\>",annotated_text)
+    #print(document)
+    result = []
+    # if len(location_arr) == 0:
+    #     state_pattern = re.compile(r"in ([A-Z]{2})")
+    #     state_pattern_result = re.findall(state_pattern,document)
+    #     if len(state_pattern_result)>0:
+    #         start_index = 0
+    #         for item in state_pattern_result:
+    #             str_index = document[start_index:].index(item)
+    #             subdocument = document[:str_index]
+    #             word_index = len(subdocument.split())
+    #             result.append(word_index)
+    #             start_index = start_index+str_index+len(item)
+    if len(location_arr) > 0:
+        # words = annotated_text.split()
+        # for i in range(len(words)):
+        #     if "<LOCATION>" in words[i]:
+        #         result.append(i)
+        for location in location_arr:
+            result.append(result_normalize(location))
+    #print(result)
+    return result
 
 def age_recognition(document,is_raw_content):
     text = ""
@@ -135,165 +272,6 @@ def age_recognition(document,is_raw_content):
     #     result.append(item[0])
     # return result
 
-def hair_color_recognition(document,is_raw_content):
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
-    else:
-        text = get_text(document)
-    normalized_color = ["blonde", "brown", "black", "red", "auburn", "chestnut", "gray", "white","dark"]
-    color_dic = webcolors.CSS3_NAMES_TO_HEX
-    for color in normalized_color:
-        if color not in color_dic:
-            color_dic[color] = "1"
-    text_result = []
-    # raw_content_result = []
-    text_without_quotation = re.sub(r'[^\w\s]','',text)
-    # raw_content_without_quotation = re.sub(r'[^\w\s]','',raw_content)
-    words = text_without_quotation.split()
-    # raw_words = raw_content_without_quotation.split()
-    for i in range(len(words)):
-        if fuzz.ratio(words[i].lower(),"hair")>=80: #judge if word and hair are similar
-            color_str = ""
-            eye_color = False
-            for j in range(i+1,i+6): #look for color vocabulary after hair
-                if words[j].lower() in color_dic:
-                    color_str = words[j].lower()
-                if fuzz.ratio(words[i].lower(),"eyes")>=80: #check if eyes color is around
-                    eye_color = True
-            if color_str:
-                if eye_color:
-                    hair_color_str = ""
-                    for j in range(i-5,i):
-                        if words[j].lower() in color_dic:
-                            hair_color_str = words[j].lower()
-                    if hair_color_str:
-                        text_result.append(hair_color_str)
-                    else:
-                        text_result.append(color_str)
-                else:
-                    text_result.append(color_str)
-            else:
-                hair_color_str = ""
-                for j in range(i-5,i):
-                    if words[j].lower() in color_dic:
-                        hair_color_str = words[j].lower()
-                if hair_color_str:
-                    text_result.append(hair_color_str)
-
-    # for i in range(len(raw_words)):
-    #     if fuzz.ratio(raw_words[i].lower(),"hair")>=80: #judge if word and hair are similar
-    #         color_str = ""
-    #         eye_color = False
-    #         for j in range(i+1,i+6): #look for color vocabulary after hair
-    #             if raw_words[j].lower() in color_dic:
-    #                 color_str = raw_words[j].lower()
-    #             if fuzz.ratio(raw_words[i].lower(),"eyes")>=80: #check if eyes color is around
-    #                 eye_color = True
-    #         if color_str:
-    #             if eye_color:
-    #                 hair_color_str = ""
-    #                 for j in range(i-5,i):
-    #                     if raw_words[j].lower() in color_dic:
-    #                         hair_color_str = raw_words[j].lower()
-    #                 if hair_color_str:
-    #                     raw_content_result.append(hair_color_str)
-    #                 else:
-    #                     raw_content_result.append(color_str)
-    #             else:
-    #                 raw_content_result.append(color_str)
-    #         else:
-    #             hair_color_str = ""
-    #             for j in range(i-5,i):
-    #                 if raw_words[j].lower() in color_dic:
-    #                     hair_color_str = raw_words[j].lower()
-    #             if hair_color_str:
-    #                 raw_content_result.append(hair_color_str)
-    # if len(text_result)>len(raw_content_result):
-    #     return text_result
-    # else:
-    #     return raw_content_result
-    return text_result
-
-def eye_color_recognition(document,is_raw_content):
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
-    else:
-        text = get_text(document)
-    normalized_color = ["blue", "brown", "green", "hazel", "gray", "amber"]
-    color_dic = webcolors.CSS3_NAMES_TO_HEX
-    for color in normalized_color:
-        if color not in color_dic:
-            color_dic[color] = "1"
-    text_result = []
-    #raw_content_result = []
-    text_without_quotation = re.sub(r'[^\w\s]','',text)
-    #raw_content_without_quotation = re.sub(r'[^\w\s]','',raw_content)
-    words = text_without_quotation.split()
-    #raw_words = raw_content_without_quotation.split()
-    for i in range(len(words)):
-        if fuzz.ratio(words[i].lower(),"eyes")>=80: #judge if word and hair are similar
-            color_str = ""
-            hair_color = False
-            for j in range(i+1,i+6): #look for color vocabulary after eyes
-                if words[j].lower() in color_dic:
-                    color_str = words[j].lower()
-                if fuzz.ratio(words[i].lower(),"hair")>=80: #check if eyes color is around
-                    hair_color = True
-            if color_str:
-                if hair_color:
-                    eye_color_str = ""
-                    for j in range(i-5,i):
-                        if words[j].lower() in color_dic:
-                            eye_color_str = words[j].lower()
-                    if eye_color_str:
-                        text_result.append(eye_color_str)
-                    else:
-                        text_result.append(color_str)
-                else:
-                    text_result.append(color_str)
-            else:
-                eye_color_str = ""
-                for j in range(i-5,i):
-                    if words[j].lower() in color_dic:
-                        eye_color_str = words[j].lower()
-                if eye_color_str:
-                    text_result.append(eye_color_str)
-
-    # for i in range(len(raw_words)):
-    #     if fuzz.ratio(raw_words[i].lower(),"eyes")>=80: #judge if word and hair are similar
-    #         color_str = ""
-    #         hair_color = False
-    #         for j in range(i+1,i+6): #look for color vocabulary after eyes
-    #             if raw_words[j].lower() in color_dic:
-    #                 color_str = raw_words[j].lower()
-    #             if fuzz.ratio(raw_words[i].lower(),"hair")>=80: #check if eyes color is around
-    #                 hair_color = True
-    #         if color_str:
-    #             if hair_color:
-    #                 eye_color_str = ""
-    #                 for j in range(i-5,i):
-    #                     if raw_words[j].lower() in color_dic:
-    #                         eye_color_str = raw_words[j].lower()
-    #                 if eye_color_str:
-    #                     raw_content_result.append(eye_color_str)
-    #                 else:
-    #                     raw_content_result.append(color_str)
-    #             else:
-    #                 raw_content_result.append(color_str)
-    #         else:
-    #             eye_color_str = ""
-    #             for j in range(i-5,i):
-    #                 if raw_words[j].lower() in color_dic:
-    #                     eye_color_str = raw_words[j].lower()
-    #             if eye_color_str:
-    #                 raw_content_result.append(eye_color_str)
-    # if len(text_result)>len(raw_content_result):
-    #     return text_result
-    # else:
-    #     return raw_content_result
-    return text_result
 
 def nationality_recognition(document,is_raw_content):
     text = ""
@@ -347,125 +325,181 @@ def ethnicity_recognition(document,is_raw_content):
             result.append(word)
     return result
 
-def review_site_recognition(document,is_raw_content):
-    #url_pattern = re.compile(r'(http[s]?://)|(www.)(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+def price_recognition(document,is_raw_content):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    review_site_list = ["eccie", "TER", "preferred411", "eccie.net", "theeroticreview",]
-    review_site = []
-    hyperlinks = hyperlink_recognition(document,is_raw_content)
-    if hyperlinks:
-        for link in hyperlinks:
-            for site in review_site_list:
-                if site in link:
-                    if site == "eccie.net":
-                        site = "eccie"
-                    if site == "theeroticreview":
-                        site = "TER"
-                    review_site.append(site)
-    return review_site
+    price1 = "(?:\d+\.)?\d+,\d+"
+    price2 = "(^(\$|€|¥|£|$|Fr|¥|kr|Ꝑ|ք|₩|R|(R$)|₺|₹)\d+)"
+    units = "(Z|zero)|(O|one)|(T|two)|(T|three)|(F|four)|(F|five)|(S|six)|(S|seven)|(E|eight)|(N|nine)|(T|ten)|(E|eleven)|(T|twelve)|(T|thirteen)|(F|fourteen)|(F|fifteen)|(S|sixteen)|(S|seventeen)|(E|eighteen)|(N|nineteen)"
+    tens = "(T|ten)|(T|twenty)|(T|thirty)|(F|forty)|(F|fourty)|(F|fifty)|(S|sixty)|(S|seventy)|(E|eighty)|(N|ninety)"
+    hundred = "(H|hundred)"
+    thousand = "(T|thousand)"
+    OPT_DASH = "-?"
+    price3 = "(" + units + OPT_DASH + "(" + thousand + ")?" + OPT_DASH + "(" + units + OPT_DASH + hundred + ")?" + OPT_DASH + "(" + tens + ")?" + ")" + "|" + "(" + tens + OPT_DASH + "(" + units + ")?" + ")"
+    price4 = "\d+"
+    preDollarPrice = [price1, price3, price4]
+    split = text.split(" ")
+    priceList = {}
+    for i in range(len(split)):
+        if split[i] == "dollar" or split[i] == "dollars":
+            for pricePat in preDollarPrice:
+                price = re.findall(pricePat, split[i - 1])
+                if price:
+                    priceList[i-1] = split[i - 1] + " " + split[i]
+                    #print(priceList[i-1])
+        else:
+            price = re.findall(price2, split[i])
+            if price:
+                priceList[i] = price[0][0]
+                #print(priceList[i])
+    return priceList
 
-def email_recognition(document,is_raw_content):
+def hair_color_recognition(document,is_raw_content):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    regex = re.compile(("([a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`"
-                    "{|}~-]+)*(@|\sat\s)(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(\.|"
-                    "\sdot\s))+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)"))
-    result = []
-    text_result = re.findall(regex,text)
-    #raw_content_result = re.findall(regex,raw_content)
-    # if len(text_result)>=len(raw_content_result):
-    #     for email in text_result:
-    #         if not email[0].startswith('//'):
-    #             result.append(email[0].lower())
-    # else:
-    #     for email in raw_content_result:
-    #         if not email[0].startswith('//'):
-    #             result.append(email[0].lower())
-    for email in text_result:
-        if not email[0].startswith('//'):
-            result.append(email[0].lower())
-    return result
+    normalized_color = ["blonde", "brown", "black", "red", "auburn", "chestnut", "gray", "white","dark"]
+    color_dic = webcolors.CSS3_NAMES_TO_HEX
+    for color in normalized_color:
+        if color not in color_dic:
+            color_dic[color] = "1"
+    text_result = []
+    text_without_quotation = re.sub(r'[^\w\s]','',text)
+    words = text_without_quotation.split()
+    for i in range(len(words)):
+        if fuzz.ratio(words[i].lower(),"hair")>=80: #judge if word and hair are similar
+            color_str = ""
+            eye_color = False
+            for j in range(i+1,i+6): #look for color vocabulary after hair
+                if j<len(words):
+                    if words[j].lower() in color_dic:
+                        color_str = words[j].lower()
+                    if fuzz.ratio(words[i].lower(),"eyes")>=80: #check if eyes color is around
+                        eye_color = True
+            if color_str:
+                if eye_color:
+                    hair_color_str = ""
+                    for j in range(i-5,i):
+                        if words[j].lower() in color_dic:
+                            hair_color_str = words[j].lower()
+                    if hair_color_str:
+                        text_result.append(hair_color_str)
+                    else:
+                        text_result.append(color_str)
+                else:
+                    text_result.append(color_str)
+            else:
+                hair_color_str = ""
+                for j in range(i-5,i):
+                    if words[j].lower() in color_dic:
+                        hair_color_str = words[j].lower()
+                if hair_color_str:
+                    text_result.append(hair_color_str)
+    return text_result
 
-def phone_recognition(document,is_raw_content):
+def eye_color_recognition(document,is_raw_content):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)"
-    text_result = re.findall(number_pattern,text)
-    #raw_content_result = re.findall(number_pattern,raw_content)
+    normalized_color = ["blue", "brown", "green", "hazel", "gray", "amber"]
+    color_dic = webcolors.CSS3_NAMES_TO_HEX
+    for color in normalized_color:
+        if color not in color_dic:
+            color_dic[color] = "1"
+    text_result = []
+    text_without_quotation = re.sub(r'[^\w\s]','',text)
+    words = text_without_quotation.split()
+    for i in range(len(words)):
+        if fuzz.ratio(words[i].lower(),"eyes")>=80: #judge if word and hair are similar
+            color_str = ""
+            hair_color = False
+            for j in range(i+1,i+6): #look for color vocabulary after eyes
+                if words[j].lower() in color_dic:
+                    color_str = words[j].lower()
+                if fuzz.ratio(words[i].lower(),"hair")>=80: #check if eyes color is around
+                    hair_color = True
+            if color_str:
+                if hair_color:
+                    eye_color_str = ""
+                    for j in range(i-5,i):
+                        if words[j].lower() in color_dic:
+                            eye_color_str = words[j].lower()
+                    if eye_color_str:
+                        text_result.append(eye_color_str)
+                    else:
+                        text_result.append(color_str)
+                else:
+                    text_result.append(color_str)
+            else:
+                eye_color_str = ""
+                for j in range(i-5,i):
+                    if words[j].lower() in color_dic:
+                        eye_color_str = words[j].lower()
+                if eye_color_str:
+                    text_result.append(eye_color_str)
+    return text_result
+
+def services_recognition(document,is_raw_content):
+    text = ""
+    if is_raw_content:
+        text = get_raw_content(document)
+    else:
+        text = get_text(document)
+    service_list_path = "resource/serviceList.txt"
+    sex_service = []
+    with open(service_list_path, "r") as inputFile:
+        services = inputFile.readlines()
+        for i in range(len(services)):
+            services[i] = services[i].strip("\n")
+    for service in services:
+        pattern = "(?i)(" + service + ")"
+        results = re.findall(pattern, text)
+        if results:
+            for res in results:
+                sex_service.append(result_normalize(res))
+    return sex_service
+
+def tattoo_recognition(document,is_raw_content):
+    return ""
+
+def multi_providers(document,is_raw_content):
+    return ""
+
+def height_recognition(document,is_raw_content):
+    text = ""
+    if is_raw_content:
+        text = get_raw_content(document)
+    else:
+        text = get_text(document)
+    height_pattern = re.compile(r"(([1-9])'(([0-9])\")?)")
+    height_pattern_result = re.findall(height_pattern,text)
     result = []
-    # if len(text_result)>=len(raw_content_result):
-    #     for item in text_result:
-    #         result.append("".join(item))
-    # else:
-    #     for item in raw_content_result:
-    #         result.append("".join(item))
-    for item in text_result:
-        result.append("".join(item))
+    if len(height_pattern_result)>0:
+        for item in height_pattern_result:
+            result.append(item[0])
     return result
 
-def name_recognition(document,is_raw_content):
-    # text = ""
-    # if is_raw_content:
-    #     text = get_raw_content(document)
-    # else:
-    #     text = get_text(document)
-    annotated_text = ""
+def weight_recognition(document,is_raw_content):
+    text = ""
     if is_raw_content:
-        annotated_text = document["annotated_raw_content"]
+        text = get_raw_content(document)
     else:
-        annotated_text = document["annotated_clean_content"]
-    name_pattern = re.compile(r"\<PERSON\>(.*?)\</PERSON>")
-    name_pattern_result = re.findall(name_pattern,annotated_text)
+        text = get_text(document)
+    weight_pattern = r"(?:^|\D)[\d]{2,3}[^A-Za-z0-9]?(?i)(?:kg|lb)"
+    weight_pattern_result = re.findall(weight_pattern,text)
     result = []
-    if len(name_pattern_result)>0:
-        for item in name_pattern_result:
-            result.append(result_normalize(item))
+    if len(weight_pattern_result)>0:
+        for item in weight_pattern_result:
+            result.append(item)
     return result
 
-def location_recognition(document,is_raw_content):
-    # text = ""
-    # if is_raw_content:
-    #     text = get_raw_content(document)
-    # else:
-    #     text = get_text(document)
-    annotated_text = ""
-    if is_raw_content:
-        annotated_text = document["annotated_raw_content"]
-    else:
-        annotated_text = document["annotated_clean_content"]
-    location_arr = re.findall(r"\<LOCATION\>(.*?)\</LOCATION\>",annotated_text)
-    #print(document)
-    result = []
-    # if len(location_arr) == 0:
-    #     state_pattern = re.compile(r"in ([A-Z]{2})")
-    #     state_pattern_result = re.findall(state_pattern,document)
-    #     if len(state_pattern_result)>0:
-    #         start_index = 0
-    #         for item in state_pattern_result:
-    #             str_index = document[start_index:].index(item)
-    #             subdocument = document[:str_index]
-    #             word_index = len(subdocument.split())
-    #             result.append(word_index)
-    #             start_index = start_index+str_index+len(item)
-    if len(location_arr) > 0:
-        # words = annotated_text.split()
-        # for i in range(len(words)):
-        #     if "<LOCATION>" in words[i]:
-        #         result.append(i)
-        for location in location_arr:
-            result.append(result_normalize(location))
-    #print(result)
-    return result
 
 def organization_recognition(document,is_raw_content):
     # text = ""
@@ -719,26 +753,6 @@ def result_normalize(result):
         normedResult = re.sub("[^\w\s]"," ",result.lower())
     return normedResult
 
-def services_recognition(document,is_raw_content):
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
-    else:
-        text = get_text(document)
-    service_list_path = "resource/serviceList.txt"
-    sex_service = []
-    with open(service_list_path, "r") as inputFile:
-        services = inputFile.readlines()
-        for i in range(len(services)):
-            services[i] = services[i].strip("\n")
-    for service in services:
-        pattern = "(?i)(" + service + ")"
-        results = re.findall(pattern, text)
-        if results:
-            for res in results:
-                sex_service.append(result_normalize(res))
-    return sex_service
-
 def hyperlink_recognition(document,is_raw_content):
     text = ""
     if is_raw_content:
@@ -823,53 +837,6 @@ def image_in_hotel_motel_room_recognition(document):
 def image_without_professional_lighting_recognition(document):
     return []
 
-def price_recognition(document,is_raw_content):
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
-    else:
-        text = get_text(document)
-    price1 = "(?:\d+\.)?\d+,\d+"
-    price2 = "(^(\$|€|¥|£|$|Fr|¥|kr|Ꝑ|ք|₩|R|(R$)|₺|₹)\d+)"
-    units = "(Z|zero)|(O|one)|(T|two)|(T|three)|(F|four)|(F|five)|(S|six)|(S|seven)|(E|eight)|(N|nine)|(T|ten)|(E|eleven)|(T|twelve)|(T|thirteen)|(F|fourteen)|(F|fifteen)|(S|sixteen)|(S|seventeen)|(E|eighteen)|(N|nineteen)"
-    tens = "(T|ten)|(T|twenty)|(T|thirty)|(F|forty)|(F|fourty)|(F|fifty)|(S|sixty)|(S|seventy)|(E|eighty)|(N|ninety)"
-    hundred = "(H|hundred)"
-    thousand = "(T|thousand)"
-    OPT_DASH = "-?"
-    price3 = "(" + units + OPT_DASH + "(" + thousand + ")?" + OPT_DASH + "(" + units + OPT_DASH + hundred + ")?" + OPT_DASH + "(" + tens + ")?" + ")" + "|" + "(" + tens + OPT_DASH + "(" + units + ")?" + ")"
-    price4 = "\d+"
-    preDollarPrice = [price1, price3, price4]
-    split = text.split(" ")
-    priceList = {}
-    for i in range(len(split)):
-        if split[i] == "dollar" or split[i] == "dollars":
-            for pricePat in preDollarPrice:
-                price = re.findall(pricePat, split[i - 1])
-                if price:
-                    priceList[i-1] = split[i - 1] + " " + split[i]
-                    #print(priceList[i-1])
-        else:
-            price = re.findall(price2, split[i])
-            if price:
-                priceList[i] = price[0][0]
-                #print(priceList[i])
-    return priceList
-
-def height_recognition(document,is_raw_content):
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
-    else:
-        text = get_text(document)
-    height_pattern = re.compile(r"(([1-9])'(([0-9])\")?)")
-    height_pattern_result = re.findall(height_pattern,text)
-    if len(height_pattern_result)>0:
-        result = []
-        for item in height_pattern_result:
-            result.append(item[0])
-        return result
-    return ""
-
 def color_recognition(document,is_raw_content):
     text = ""
     if is_raw_content:
@@ -886,64 +853,6 @@ def color_recognition(document,is_raw_content):
     return result
 
 
-def physical_address_recognition(document,is_raw_content):
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
-    else:
-        text = get_text(document)
-    #raw_content = get_raw_content(document)
-    text_without_quotation = re.sub(r'[^\w\s]','',text)
-    #raw_content_without_quotation = re.sub(r'[^\w\s]','',raw_content)
-    streetNumber = "([1-9][0-9]{1,3} )"
-    nsew = "(((N|S|E|W|North|South|East|West|NW|NE|SW|SE) )?)"
-    nsewString = "North|South|East|West|NW|NE|SW|SE|"
-    streetTypeString = "Street|St|ST|Boulevard|Blvd|Lane|Ln|Road|Rd|Avenue|Ave|Circle|Cir|Cove|Cv|Drive|Dr|Parkway|Pkwy|Court|Ct|Square|Sq|Loop|Lp|"
-    roomString = "Suite|suite|Ste|ste|Apt|apt|Apartment|apartment|Room|room|Rm|rm|#|suitenumber"
-    streetName_pattern1 = r"(((?!(?:"+nsewString+streetTypeString+roomString+r")\b)[A-Z][a-z]+(?: (?!(?:"+nsewString+streetTypeString+roomString+r")\b)[A-Z][a-z]+){0,2})|((\d+)(st|ST|nd|ND|rd|RD|th|TH)))"
-    #streetName_pattern2 = r"((\d+)(st|ST|nd|ND|rd|RD|th|TH))"
-    streetName = streetName_pattern1 #+ "|" + streetName_pattern2
-    #streetName = "((?!(?:Apt)\b)[A-Z][a-z]+(?: (?!(?:Apt)\b)[A-Z][a-z]+){0,2})"
-    streetType = "((Street|St|ST|Boulevard|Blvd|Lane|Ln|Road|Rd|Avenue|Ave|Circle|Cir|Cove|Cv|Drive|Dr|Parkway|Pkwy|Court|Ct|Square|Sq|Loop|Lp) )?"
-    room = "(((Suite|suite|Ste|ste|Apt|apt|Apartment|apartment|Room|room|Rm|rm|#|suitenumber) ([0-9]{1,4}([A-Za-z]?)) )?)"
-    city_state = "((((([A-Z][a-z]+)|([A-Z]+)) ){1,2}[A-Z]{2} )?)"
-    zip_code = "([0-9]{5} )?"
-    addree_pattern = re.compile(r"("+streetNumber+nsew+streetName_pattern1+" "+streetType+nsew+room+city_state+zip_code+")")
-    text_result= re.findall(addree_pattern,text_without_quotation)
-    #raw_content_result= re.findall(addree_pattern,raw_content_without_quotation)
-    result = []
-    # if len(text_result)>=len(raw_content_result):
-    #     for item in text_result:
-    #         address_parts = item[0].split()
-    #         if len(address_parts)>2:   #although only street number and streeName are required in the pattern, address consists of at least three parts.
-    #             isValid = False
-    #             for part in address_parts:
-    #                 if part.lower() in streetTypeString.lower() or part.lower() in nsew.lower():
-    #                     isValid = True
-    #             if isValid:
-    #                 result.append(result_normalize(item[0]))
-    # else:
-    #     for item in raw_content_result:
-    #         address_parts = item[0].split()
-    #         if len(address_parts)>2:   #although only street number and streeName are required in the pattern, address consists of at least three parts.
-    #             isValid = False
-    #             for part in address_parts:
-    #                 if part.lower() in streetTypeString.lower() or part.lower() in nsew.lower():
-    #                     isValid = True
-    #             if isValid:
-    #                 result.append(result_normalize(item[0]))
-    for item in text_result:
-        address_parts = item[0].split()
-        if len(address_parts)>2:   #although only street number and streeName are required in the pattern, address consists of at least three parts.
-            isValid = False
-            for part in address_parts:
-                if part.lower() in streetTypeString.lower() or part.lower() in nsew.lower():
-                    isValid = True
-            if isValid:
-                result.append(result_normalize(item[0]))
-    return result
-
-
 if __name__ != "__main__":
     global functionDic
     functionDic = {"physical_address": physical_address_recognition,"age":age_recognition,
@@ -951,6 +860,36 @@ if __name__ != "__main__":
                    "ethnicity":ethnicity_recognition,"review_site":review_site_recognition,"email": email_recognition,"phone": phone_recognition,
                    "location":location_recognition,"posting_date":posting_date_recognition,"price":price_recognition,"number_of_individuals": number_of_individuals_recognition,
                    "gender":gender_recognition,"review_id":review_id_recognition,"title":title_recognition,"business":business_recognition,"business_type":business_type_recognition,
-                   "business_name":business_name_recognition,"services":services_recognition,"hyperlink":hyperlink_recognition,"drug_use":drug_use_recognition,
+                   "business_name":business_name_recognition,"services":services_recognition,"hyperlink":hyperlink_recognition,
                    "multiple_phone":multiple_phone_recognition,"top_level_domain":top_level_domain_recognition
                    }
+    global feature_list
+    feature_list = ["physical_address","age","name","hair_color","eye_color","nationality","ethnicity","review_site","email","phone","location","posting_date","price","number_of_individuals","gender","review_id","title","business","business_type","business_name","services","hyperlink","multiple_phone","top_level_domain"]
+
+    normalized_color = ["blonde", "brown", "black", "red", "auburn", "chestnut", "gray", "white","dark", "blue", "brown", "green", "hazel", "amber"]
+    global color_list
+    color_dic = webcolors.CSS3_NAMES_TO_HEX.keys()
+    color_list = color_dic
+    for color in normalized_color:
+        if color not in color_dic:
+            color_list.append(color)
+
+    global nationality_list
+    nationality_filepath = "./resource/nationality"
+    with open(nationality_filepath) as f:
+        nationality_list = ','.join(f.readlines()).split(",")
+        f.close()
+    ethnicity_arr = ["caucasian", "hispanic", "asian", "african american", "caribbean", "pacific islander", "middle eastern", "biracial", "south asian", "native american"]
+    nationality_list += ethnicity_arr
+
+    global service_list
+    service_list_path = "./resource/serviceList.txt"
+    service_list = []
+    with open(service_list_path, "r") as inputFile:
+        services = inputFile.readlines()
+        for i in range(len(services)):
+           service_list.append(services[i].strip())
+
+    global review_site_list
+    review_site_list = ["eccie", "TER", "preferred411"]
+

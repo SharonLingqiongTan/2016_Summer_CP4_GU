@@ -10,16 +10,16 @@ def index():
     query_list = search.query_retrival(query_path)
     for dir in os.listdir(input_path):
         if not dir.startswith("."):
-            if dir == "pointfact_documents":
-                #create the output directory for each category of question with the same name as input category
-                indexed_category_path = os.path.join(output_path,dir)
-                if not os.path.exists(indexed_category_path):
-                    mkdir = "mkdir "+indexed_category_path
-                    os.system(mkdir)
-                #do extration for each file in each category and then save the result in corresponding output path with same name
-                category = os.path.join(input_path,dir)
-                for query in os.listdir(category):
-                    if not query.startswith("."):
+            #create the output directory for each category of question with the same name as input category
+            indexed_category_path = os.path.join(output_path,dir)
+            if not os.path.exists(indexed_category_path):
+                mkdir = "mkdir "+indexed_category_path
+                os.system(mkdir)
+            #do extration for each file in each category and then save the result in corresponding output path with same name
+            category = os.path.join(input_path,dir)
+            for query in os.listdir(category):
+                if not query.startswith("."):
+                    if query == "52":
                         parsed_query = {}
                         for query_item in query_list:
                             if query_item["id"] == query:
@@ -36,7 +36,6 @@ def index():
                         for i in range(len(documents)):
                             documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
                             documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
-                            output_filepath = "/Users/infosense/Desktop/test"
                             document_path = os.path.join(output_filepath,str(i))
                             w = open(document_path,"w")
                             extractions = {}
@@ -72,3 +71,6 @@ def annotator(documents):
         indexed_raw_result += raw_indexed.split(separator)
         indexed_clean_result += clean_indexed.split(separator)
     return (indexed_raw_result,indexed_clean_result)
+
+if __name__ == "__main__":
+    index()
