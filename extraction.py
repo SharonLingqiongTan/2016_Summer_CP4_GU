@@ -135,7 +135,31 @@ def physical_address_recognition(document,is_raw_content):
     return result
 
 def social_media_ID(document,is_raw_content):
-    return ""
+    """
+    :param document:
+    :param is_raw_content:
+    :return: a list containing all the social media ID
+    """
+    social_media_list = ["facebook","instagram","twitter"]
+    text = ""
+    result = []
+    if is_raw_content:
+        text = get_raw_content(document)
+    else:
+        text = get_text(document)
+    media_str = "|".join(social_media_list)
+    #extract social media ID in a url
+    url_media_pattern = r"(%s).com/(.*)/"%media_str
+    url_media_pattern_result = re.findall(url_media_pattern,text)
+    for item in url_media_pattern_result:
+        result.append(item[0]+"@"+item[1])
+    #extract social media ID in plain text
+    plain_text_pattern = r"(%s): (\w+)\W"
+    plain_text_pattern_result = re.findall(plain_text_pattern,text)
+    for item in plain_text_pattern_result:
+        result.append(item[0]+"@"+item[1])
+    return result
+
 
 def review_site_recognition(document,is_raw_content):
     #url_pattern = re.compile(r'(http[s]?://)|(www.)(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
@@ -309,7 +333,7 @@ def ethnicity_recognition(document,is_raw_content):
     else:
         text = get_text(document)
     nationality_filepath = "./resource/nationality"
-    ethnicity_arr = ["caucasian", "hispanic", "asian", "african american", "caribbean", "pacific islander", "middle eastern", "biracial", "south asian", "native american"]
+    ethnicity_arr = ["caucasian", "hispanic", "asian", "african american", "caribbean", "pacific islander", "middle eastern", "biracial" , "south asian", "native american"]
     result = []
     f = open(nationality_filepath)
     nationality_list = ','.join(f.readlines()).split(",")
