@@ -1,0 +1,548 @@
+{
+    "Pointfact": {
+        "1222.1": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ethnicity"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "919594087952", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ethnicity", 
+                            "variable": "?ethnicity"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "1 - What is the ethnicity of the escort(s) advertised with the phone number 919594087952?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad WHERE { ?ad a qpr:Ad ; qpr:phone '7075610282' ; qpr:posting_date ?posting_date . } ORDER BY ?posting_date LIMIT 1"
+        },
+        "1222.2": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ethnicity"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "3343843063", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ethnicity", 
+                            "variable": "?ethnicity"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            },
+            "query": "2 - What is the ethnicity of the escort(s) advertised with the phone number (334) 384-3063?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad WHERE { ?ad a qpr:Ad ; qpr:phone '7075610282' ; qpr:posting_date ?posting_date . } ORDER BY ?posting_date LIMIT 1"
+        },
+        "1222.3": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?email"
+                        }
+                    ]
+                },
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "697940099", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "email", 
+                            "variable": "?email"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "3 - What is the email address of the escort(s) advertised with the phone number 697940099?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?email WHERE { ?ad a qpr:Ad ; qpr:phone '653511537' ; qpr:posting_date '2016-04-01' ; qpr:email ?email . }"
+        },
+        "1222.4": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?email"
+                        }
+                    ]
+                },
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "631307055", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "email", 
+                            "variable": "?email"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "4 - What is the email address of the escort(s) advertised with the phone number 631307055?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?email WHERE { ?ad a qpr:Ad ; qpr:phone '653511537' ; qpr:posting_date '2016-04-01' ; qpr:email ?email . }"
+        },
+        "1222.5": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?price"
+                        }
+                    ]
+                },
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "7185048742", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "price", 
+                            "variable": "?price"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "5 - What are the prices associated with the ad posted with the phone number 718-504-8742?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?price WHERE { ?ad a qpr:Ad ; qpr:phone '0249613444' ; qpr:posting_date '2016-05-07' ; qpr:price ?price . }"
+        },
+        "1222.6": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?price"
+                        }
+                    ]
+                },
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "02 4961 3444", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "price", 
+                            "variable": "?price"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "6 - What are the prices associated with the phone number 02 4961 3444?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?price WHERE { ?ad a qpr:Ad ; qpr:phone '0249613444' ; qpr:posting_date '2016-05-07' ; qpr:price ?price . }"
+        },
+        "1222.7": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?eye_color"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "GFEMonkey.com", 
+                            "isOptional": false, 
+                            "predicate": "top_level_domain"
+                        }, 
+                        {
+                            "constraint": "Abigail.in.SF@gmail.com", 
+                            "isOptional": false, 
+                            "predicate": "email"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "eye_color", 
+                            "variable": "?eye_color"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "7 - What is the eye color of the escort(s) advertised on GFEMonkey with the email address Abigail.in.SF@gmail.com", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?eye_color WHERE { ?ad a qpr:Ad ; qpr:top_level_domain 'GFEMonkey.com' ; qpr:email 'Phoenix01skye@gmail.com' ; qpr:eye_color ?eye_color . }"
+        }, 
+        "1222.8": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?phone"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "81 lbs", 
+                            "isOptional": false, 
+                            "predicate": "weight"
+                        }, 
+                        {
+                            "constraint": "Abigail.in.SF@gmail.com", 
+                            "isOptional": false, 
+                            "predicate": "email"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "eye_color", 
+                            "variable": "?eye_color"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "8 - What is the phone number of the escort that is 81 lbs in Bangkok?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?eye_color WHERE { ?ad a qpr:Ad ; qpr:top_level_domain 'GFEMonkey.com' ; qpr:email 'Phoenix01skye@gmail.com' ; qpr:eye_color ?eye_color . }"
+        },
+        "1222.9": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?services"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "23 years old", 
+                            "isOptional": false, 
+                            "predicate": "age"
+                        }, 
+                        {
+                            "constraint": "Seattle", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "services", 
+                            "variable": "?services"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "9 - What services are provided in the ad posted in Seattle with a 23 years old escort?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?eye_color WHERE { ?ad a qpr:Ad ; qpr:top_level_domain 'GFEMonkey.com' ; qpr:email 'Phoenix01skye@gmail.com' ; qpr:eye_color ?eye_color . }"
+        },
+        "1222.10": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?eye_color"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "7022187871", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "eye_color", 
+                            "variable": "?eye_color"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "10 - What it the eye color of the escort with phone number 702-218-7871?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?eye_color WHERE { ?ad a qpr:Ad ; qpr:top_level_domain 'GFEMonkey.com' ; qpr:email 'Phoenix01skye@gmail.com' ; qpr:eye_color ?eye_color . }"
+        },
+        "1222.11": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?price"
+                        }
+                    ]
+                },
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "5142778188", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "constraint": "Montreal, Quebec", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "price", 
+                            "variable": "?price"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "11 - What is the price of the escort in Montreal, Quebec with phone number 514-277-8188?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?price WHERE { ?ad a qpr:Ad ; qpr:phone '0249613444' ; qpr:posting_date '2016-05-07' ; qpr:price ?price . }"
+        }, 
+        "1222.12": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?height"
+                        }
+                    ]
+                },
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "light brown", 
+                            "isOptional": false, 
+                            "predicate": "hair_color"
+                        }, 
+                        {
+                            "constraint": "Portland", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "height", 
+                            "variable": "?height"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "12 - What is the height of the escort in Portland with light brown hair color?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?price WHERE { ?ad a qpr:Ad ; qpr:phone '0249613444' ; qpr:posting_date '2016-05-07' ; qpr:price ?price . }"
+        }, 
+        "1222.13": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?age"
+                        }
+                    ]
+                },
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "47kg", 
+                            "isOptional": false, 
+                            "predicate": "weight"
+                        }, 
+                        {
+                            "constraint": "Bangkok", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "age", 
+                            "variable": "?age"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "13 - What is the age of the escort in Bangkok that is 47kg?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?price WHERE { ?ad a qpr:Ad ; qpr:phone '0249613444' ; qpr:posting_date '2016-05-07' ; qpr:price ?price . }"
+        }, 
+        "1222.14": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?name"
+                        }
+                    ]
+                },
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "7784019922", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "constraint": "Victoria, British", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "name", 
+                            "variable": "?name"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "14 - What is the name of the escort in Victoria, British with phone number 778-401-9922?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?price WHERE { ?ad a qpr:Ad ; qpr:phone '0249613444' ; qpr:posting_date '2016-05-07' ; qpr:price ?price . }"
+        },
+        "1222.15": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?weight"
+                        }
+                    ]
+                },
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "7025179930", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "constraint": "portland", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "weight", 
+                            "variable": "?weight"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "15 - WWhat is the weight of the escort in portland with phone number (702)517-9930?", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?price WHERE { ?ad a qpr:Ad ; qpr:phone '0249613444' ; qpr:posting_date '2016-05-07' ; qpr:price ?price . }"
+        }
+    }
+}   
+
+

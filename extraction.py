@@ -144,7 +144,7 @@ def physical_address_recognition(document,is_raw_content):
                 result.append(result_normalize(item[0]))
     return result
 
-def social_media_ID(document,is_raw_content):
+def social_media_id_recognition(document,is_raw_content):
     """
     :param document:
     :param is_raw_content:
@@ -389,7 +389,7 @@ def price_recognition(document,is_raw_content):
             if price:
                 priceList[i] = price[0][0]
                 #print(priceList[i])
-    return priceList
+    return priceList.items()
 
 def hair_color_recognition(document,is_raw_content):
     text = ""
@@ -896,10 +896,8 @@ if __name__ != "__main__":
     functionDic = {"physical_address": physical_address_recognition,"age":age_recognition,
                    "name":name_recognition, "hair_color":hair_color_recognition,"eye_color":eye_color_recognition,"nationality":nationality_recognition,
                    "ethnicity":ethnicity_recognition,"review_site":review_site_recognition,"email": email_recognition,"phone": phone_recognition,
-                   "location":location_recognition,"posting_date":posting_date_recognition,"price":price_recognition,"number_of_individuals": number_of_individuals_recognition,
-                   "gender":gender_recognition,"review_id":review_id_recognition,"title":title_recognition,"business":business_recognition,"business_type":business_type_recognition,
-                   "business_name":business_name_recognition,"services":services_recognition,"hyperlink":hyperlink_recognition,
-                   "multiple_phone":multiple_phone_recognition,"top_level_domain":top_level_domain_recognition
+                   "location":location_recognition,"price":price_recognition,"number_of_individuals": number_of_individuals_recognition,
+                    "social_media_id":social_media_id_recognition,"services":services_recognition,"height":height_recognition,"weight":weight_recognition
                    }
     global feature_list
     feature_list = ["physical_address","age","name","hair_color","eye_color","nationality","ethnicity","review_site","email","phone","location","posting_date","price","number_of_individuals","gender","review_id","title","business","business_type","business_name","services","hyperlink","multiple_phone","top_level_domain"]

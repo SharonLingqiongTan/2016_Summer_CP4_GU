@@ -1,57 +1,69 @@
 __author__ = 'infosense'
 import sys,json,datetime,os
 import yaml
-import fuzzywuzzy as fuzz
+from fuzzywuzzy import fuzz
 import search,extraction,ebola_html_dealer
 
 def main():
     reload(sys)
     sys.setdefaultencoding("utf-8")
-    query_path = "sparql-queries-parsed-2016-07-23T11-11.json"
+    query_path = "spql_self_built_query.json"
     query_list = search.query_retrival(query_path)
     answer_dic = []
     for query in query_list:
-        if query["type"] == "aggregate" and query["id"] == "1519":
-            print(datetime.datetime.now())
-            filepath = "aggregate/"+query["id"]
+        if query["type"] == "pointfact" and query["id"] == "1222.2":
+            filepath = "pointfact/"+query["id"]
             parsed_query_dic = search.query_parse(query)
+            print(parsed_query_dic)
             query_body = search.query_body_build(parsed_query_dic)
+            print(query_body)
             documents = search.elastic_search(query_body)
-            annotated_raw_contents,annotated_clean_contents =  annotator(documents)
+            if "location" in parsed_query_dic or "name" in parsed_query_dic:
+                annotated_raw_contents,annotated_clean_contents =  annotator(documents)
+            else:
+                annotated_raw_contents,annotated_clean_contents = [],[]
+            print(len(documents))
             for i in range(len(documents)):
-                documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
-                documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
-                output_filepath = "/Users/infosense/Desktop/test"
-                document_path = os.path.join(output_filepath,str(i))
-                w = open(document_path,"w")
-                extractions = {}
-                for func_name,func in extraction.functionDic.items():
-                    extractions["raw_"+func_name] = func(documents[i],True)
-                    extractions[func_name] = func(documents[i],False)
-                documents[i]["indexing"] = extractions
-                json.dump(documents[i],w)
-                w.close()
-            print(datetime.datetime.now())
-            #     if validate(document,parsed_query_dic):
-            #         answer = answer_extraction(document,parsed_query_dic)
-            #         #print(answer)
-            #         #if len(answer)>0:
-            #         dic = {}
-            #         dic["id"] = document["_id"]
-            #         dic["validation_score"] = document["validation_score"]
-            #         dic["els_score"] = document["_score"]
-            #         dic["extraction_score"] = answer["extraction_score"]
-            #         dic["feature"] = extraction.generate_feature_score(document)
-            #         dic.update(answer)
-            #         result.append(dic)
-            # final_result = generate_formal_answer(query,result)
-            # answer_dic.append(final_result)
-            # #print(answer_dic)
-            # f = open(filepath,"w")
-            # json.dump(answer_dic,f)
-            # f.close()
+                print(i)
+                if "location" in parsed_query_dic or "name" in parsed_query_dic:
+                    documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
+                    documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
+                # output_filepath = "/Users/infosense/Desktop/test"
+                # document_path = os.path.join(output_filepath,str(i))
+                # w = open(document_path,"w")
+                # extractions = {}
+                # for func_name,func in extraction.functionDic.items():
+                #     extractions["raw_"+func_name] = func(documents[i],True)
+                #     extractions[func_name] = func(documents[i],False)
+                # documents[i]["indexing"] = extractions
+                # json.dump(documents[i],w)
+                # w.close()
+                result = []
+                if validate(documents[i],parsed_query_dic):
+                    print(1)
+                    answer = answer_extraction(documents[i],parsed_query_dic)
+                    #print(answer)
+                    #if len(answer)>0:
+                    dic = {}
+                    dic["id"] = documents[i]["_id"]
+                    # dic["validation_score"] = documents[i]["validation_score"]
+                    # dic["els_score"] = documents[i]["_score"]
+                    # dic["extraction_score"] = answer["extraction_score"]
+                    # dic["feature"] = extraction.generate_feature_score(document)
+                    dic.update(answer)
+                    result.append(dic)
+            final_result = generate_formal_answer(query,result)
+            answer_dic.append(final_result)
+            #print(answer_dic)
+            f = open(filepath,"w")
+            json.dump(answer_dic,f)
+            f.close()
 
 def annotator(documents):
+    """
+    :param documents: List:The documents retrieved for each query
+    :return: tuple(a,b) a:List of annotated raw_content  b:List of annotated extracted_text
+    """
     #print(datetime.datetime.now())
     para_size = 300 #how many documents are annotated every time
     para_num = len(documents)/para_size
@@ -251,7 +263,7 @@ def generate_formal_answer(query,result):
         for i in range(select_answer_number):
             answer_dic = {}
             answer_dic["?ad"] = result[i]["id"]
-            answer_dic["score"] = validate_coeff*result[i]["validation_score"]+extraction_coeff*result[i]["extraction_score"]+els_coeff*result[i]["els_score"]
+            #answer_dic["score"] = validate_coeff*result[i]["validation_score"]+extraction_coeff*result[i]["extraction_score"]+els_coeff*result[i]["els_score"]
             try:
                 if result[i][answer_field]:
                     answer_field_value = result[i][answer_field][0]
@@ -271,10 +283,10 @@ def generate_formal_answer(query,result):
         feature = group_variable[1:]
         dic = {}
         f = open("feature.txt","w")
-        for i in range(len(result)):
-            result[i]["score"] = validate_coeff*result[i]["validation_score"]+extraction_coeff*result[i]["extraction_score"]+els_coeff*result[i]["els_score"]
-            f.write(extraction.write_feature_score(result[i]["feature"],query["id"],result[i]["id"]))
-        result.sort(key= lambda k:k["score"],reverse=True)
+        # for i in range(len(result)):
+        #     result[i]["score"] = validate_coeff*result[i]["validation_score"]+extraction_coeff*result[i]["extraction_score"]+els_coeff*result[i]["els_score"]
+        #     f.write(extraction.write_feature_score(result[i]["feature"],query["id"],result[i]["id"]))
+        # result.sort(key= lambda k:k["score"],reverse=True)
         for ad in result:
             if feature in ad:
                 for item in ad[feature]:
@@ -311,30 +323,31 @@ def get_cluster_seed(query):
 
 def answer_extraction(document,parsed_query_dic):
     extraction_result = {}
-    extraction_result["extraction_score"] = 0
+    # extraction_result["extraction_score"] = 0
     answer_field = parsed_query_dic["answer_field"]
-    match_frequency = 0.0
+    # match_frequency = 0.0
     for feature in answer_field:
         #check if feature is in the metadata_extraction
-        if extraction.is_metadata(document):
-            if feature in document["_source"]["extracted_metadata"]:
-                document["meta_text_percentage"] += 1
+        # if extraction.is_metadata(document):
+        #     if feature in document["_source"]["extracted_metadata"]:
+        #         document["meta_text_percentage"] += 1
         #look for the extraction in raw content
         raw_result = extraction.functionDic[feature](document,True)
         extraction_result[feature] = raw_result
-        match_frequency += len(raw_result)
-        if raw_result:
-            document["raw_content_percentage"] += 1.0
-            extraction_result["extraction_score"] += 3
+        # match_frequency += len(raw_result)
+        # if raw_result:
+        #     document["raw_content_percentage"] += 1.0
+        #     extraction_result["extraction_score"] += 3
         #look for the extraction in extracted text
         result = extraction.functionDic[feature](document,False)
-        match_frequency += len(result)
-        if result:
-            document["extract_text_percentage"] += 1.0
-    matchword = parsed_query_dic["required_match_field"]
-    document["match_frequency"] = match_frequency/2
-    document["raw_content_percentage"] /= (len(answer_field)+len(matchword))
-    document["extract_text_percentage"] /= (len(answer_field)+len(matchword))
+        extraction_result[feature] = list(set(raw_result+result))
+        # match_frequency += len(result)
+        # if result:
+        #     document["extract_text_percentage"] += 1.0
+    # matchword = parsed_query_dic["required_match_field"]
+    # document["match_frequency"] = match_frequency/2
+    # document["raw_content_percentage"] /= (len(answer_field)+len(matchword))
+    # document["extract_text_percentage"] /= (len(answer_field)+len(matchword))
     return extraction_result
 
 def validate(document, parsed_query): # Need to write
@@ -349,78 +362,82 @@ def validate(document, parsed_query): # Need to write
     extract_score = 0
     meta_datascore = 0
     for feature in matchword:
-        if extraction.is_metadata(document):
-            if feature in document["_source"]["extracted_metadata"]:
-                meta_datascore += 1.0
+        # if extraction.is_metadata(document):
+        #     if feature in document["_source"]["extracted_metadata"]:
+        #         meta_datascore += 1.0
         if type(matchword[feature]) is list:
-            #isValid = False
+            isValid = False
             for item in matchword[feature]:
                 if item.lower() in lower_text:
-                    # isValid = True
-                    score += 1.0   #add 3 points if one of the attributes validates
+                    isValid = True
+                    # score += 1.0   #add 3 points if one of the attributes validates
                     break
             for item in matchword[feature]:
                 if item.lower() in lower_extract_text:
-                    # isValid = True
-                    extract_score += 1.0   #add 3 points if one of the attributes validates
+                    isValid = True
+                    # extract_score += 1.0   #add 3 points if one of the attributes validates
                     break
         else:
+            isValid = False
             if feature == "location":
                 location_fields = [field.strip() for field in matchword[feature].split(",")]
-                #isValid = False
                 for i in range(len(location_fields)):
                     if location_fields[i].lower() in lower_text:
-                        score += 1.0/len(location_fields)
+                        #score += 1.0/len(location_fields)
+                        isValid = True
                     if location_fields[i].lower() in lower_extract_text:
-                        extract_score += 1.0/len(location_fields)
-                        #return True
+                        #extract_score += 1.0/len(location_fields)
+                        isValid = True
                         # isValid = True
                 #     else:
                 #         return False
-                # if isValid:
-                #     return True
-                # else:
-                #     return False
             else:
                 if matchword[feature].lower() in lower_text:
-                    score += 1.0
+                    # score += 1.0
+                    isValid = True
                 if matchword[feature].lower() in lower_extract_text:
-                    extract_score += 1.0
-        if score == 0:
-            results = extraction.functionDic[feature](document,True)
+                    # extract_score += 1.0
+                    isValid = True
+            if isValid:
+                continue
+        # if score == 0:
+        results = extraction.functionDic[feature](document,True)
+        isValid = False
+        #print(results)
+        if results:
+            #isValid = False
             #print(results)
-            if results:
-                #isValid = False
-                #print(results)
-                for result in results:
-                    if fuzz.ratio(str(result),matchword[feature])>=80:
-                        score += 1.0
-                        break
-                #         isValid = True
-                #         break
-                # if isValid:
-                #     continue
-                # else:
-                #     return False
-            # else:
-            #     return False
-        if extract_score == 0 and extract_text:
+            for result in results:
+                if fuzz.ratio(str(result),matchword[feature])>=80:
+                    # score += 1.0
+                    # break
+                    isValid = True
+                    break
+        # else:
+        #     return False
+        if extract_text:
             results = extraction.functionDic[feature](document,False)
             if results:
                 #isValid = False
                 #print(results)
                 for result in results:
                     if fuzz.ratio(str(result),matchword[feature])>=80:
-                        score += 1.0
+                        #score += 1.0
+                        isValid = True
                         break
+        if isValid:
+            continue
+        else:
+            return False
     #document["validation_score"] += score
-    document["raw_content_percentage"] = score
-    document["extract_text_percentage"] = extract_score
-    document["meta_text_percentage"] = meta_datascore
-    if score+extract_score+meta_datascore>0 :
-        return True
-    else:
-        return False
+    # document["raw_content_percentage"] = score
+    # document["extract_text_percentage"] = extract_score
+    # document["meta_text_percentage"] = meta_datascore
+    # if score+extract_score+meta_datascore>0 :
+    #     return True
+    # else:
+    #     return False
+    return True
 
 if __name__ == "__main__":
     main()
