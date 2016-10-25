@@ -4,6 +4,7 @@ from fuzzywuzzy import fuzz
 from nltk.corpus import stopwords
 from datetime import date,timedelta
 import ebola_html_dealer as html_cleaner
+import phonenumbers
 
 
 def get_text(document):
@@ -77,12 +78,21 @@ def phone_recognition(document,is_raw_content):
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)"
-    text_result = re.findall(number_pattern,text)
+    # number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)"
+    # text_result = re.findall(number_pattern,text)
+    # result = []
+    # for item in text_result:
+    #     result.append("".join(item))
+    # return result
     result = []
-    for item in text_result:
-        result.append("".join(item))
-    return result
+    for country in country_abbr_list:
+        for match in phonenumbers.PhoneNumberMatcher(text,country):
+            if match.raw_string not in result:
+                result.append(match.raw_string)
+    for i in range(len(result)):
+        result[i] = re.sub(r"[\D]","",result[i])
+    return list(set(result))
+
 
 def email_recognition(document,is_raw_content):
     text = ""
@@ -494,7 +504,7 @@ def tattoo_recognition(document,is_raw_content):
     return ""
 
 def multi_providers(document,is_raw_content):
-    return ""
+    return number_of_individuals_recognition(document,is_raw_content)
 
 def height_recognition(document,is_raw_content):
     text = ""
@@ -502,7 +512,7 @@ def height_recognition(document,is_raw_content):
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    height_pattern = re.compile(r"(([1-9])'(([0-9])\")?)")
+    height_pattern = re.compile(r"(([1-9])'[\W]?(([0-9])\")?)")
     height_pattern_result = re.findall(height_pattern,text)
     result = []
     if len(height_pattern_result)>0:
@@ -516,14 +526,18 @@ def weight_recognition(document,is_raw_content):
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    weight_pattern = r"(?:^|\D)[\d]{2,3}[^A-Za-z0-9]?(?i)(?:kg|lb)"
+    weight_pattern = r"(?:^|\D)([\d]{2,3})[^A-Za-z0-9]?(?i)(kg|lb)"
     weight_pattern_result = re.findall(weight_pattern,text)
     result = []
     if len(weight_pattern_result)>0:
         for item in weight_pattern_result:
-            result.append(item)
+            if item[1] == "kg":
+                result.append(str(int(float(item[0])*2.2)))
+            else:
+                result.append(item[0])
     return result
 
+#############################################################################
 
 def organization_recognition(document,is_raw_content):
     # text = ""
@@ -916,4 +930,10 @@ if __name__ != "__main__":
 
     global review_site_list
     review_site_list = ["eccie", "TER", "preferred411"]
+
+    global country_abbr_list
+    country_abbr_path = "./resource/country_abbr"
+    f = open(country_abbr_path)
+    line = f.readlines()[0]
+    country_abbr_list = yaml.load(line)
 
