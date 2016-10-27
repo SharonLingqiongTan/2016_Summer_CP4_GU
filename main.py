@@ -11,21 +11,24 @@ def main():
     query_list = search.query_retrival(query_path)
     answer_dic = []
     for query in query_list:
-        if query["type"] == "pointfact" and query["id"] == "1222.2":
+        if query["type"] == "pointfact" and query["id"] == "1222.10":
             filepath = "pointfact/"+query["id"]
             parsed_query_dic = search.query_parse(query)
             print(parsed_query_dic)
             query_body = search.query_body_build(parsed_query_dic)
             print(query_body)
             documents = search.elastic_search(query_body)
-            if "location" in parsed_query_dic or "name" in parsed_query_dic:
-                annotated_raw_contents,annotated_clean_contents =  annotator(documents)
+            annotated_raw_contents = []
+            annotated_clean_contents = []
+            if "location" in str(parsed_query_dic) or "name" in str(parsed_query_dic):
+                annotated_raw_contents,annotated_clean_contents = annotator(documents)
             else:
                 annotated_raw_contents,annotated_clean_contents = [],[]
-            print(len(documents))
+            #print(len(documents))
+            print(len(annotated_clean_contents),len(annotated_raw_contents))
+            result = []
             for i in range(len(documents)):
-                print(i)
-                if "location" in parsed_query_dic or "name" in parsed_query_dic:
+                if "location" in str(parsed_query_dic) or "name" in str(parsed_query_dic):
                     documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
                     documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
                 # output_filepath = "/Users/infosense/Desktop/test"
@@ -38,9 +41,7 @@ def main():
                 # documents[i]["indexing"] = extractions
                 # json.dump(documents[i],w)
                 # w.close()
-                result = []
                 if validate(documents[i],parsed_query_dic):
-                    print(1)
                     answer = answer_extraction(documents[i],parsed_query_dic)
                     #print(answer)
                     #if len(answer)>0:
@@ -52,6 +53,7 @@ def main():
                     # dic["feature"] = extraction.generate_feature_score(document)
                     dic.update(answer)
                     result.append(dic)
+            #print(result)
             final_result = generate_formal_answer(query,result)
             answer_dic.append(final_result)
             #print(answer_dic)
@@ -252,7 +254,7 @@ def generate_formal_answer(query,result):
         #         result.sort(key = lambda k:k[group_by["order-variable"][1:]][0])
         #     # if "limit" in group_by:
         #     #     select_answer_number = min(len(result),group_by["limit"])
-        #print(result)
+        print(result)
         final_result["answers"] = []
         answer_field = ""
         score_list = ["extraction_score","validation_score","id","els_score"]
@@ -260,6 +262,7 @@ def generate_formal_answer(query,result):
             for key,value in result[0].items():
                 if key not in score_list:
                     answer_field = key
+        print(answer_field)
         for i in range(select_answer_number):
             answer_dic = {}
             answer_dic["?ad"] = result[i]["id"]
@@ -276,7 +279,7 @@ def generate_formal_answer(query,result):
                 final_result["answers"].append(answer_dic)
             except Exception as e:
                 pass
-        final_result["answers"].sort(key= lambda k:k["score"],reverse=True)
+        #final_result["answers"].sort(key= lambda k:k["score"],reverse=True)
     else:
         group_by = query["group-by"]
         group_variable = group_by["group-variable"]

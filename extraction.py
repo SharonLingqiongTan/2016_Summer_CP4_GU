@@ -78,20 +78,20 @@ def phone_recognition(document,is_raw_content):
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    # number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)"
-    # text_result = re.findall(number_pattern,text)
-    # result = []
-    # for item in text_result:
-    #     result.append("".join(item))
-    # return result
+    number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)"
+    text_result = re.findall(number_pattern,text)
     result = []
-    for country in country_abbr_list:
-        for match in phonenumbers.PhoneNumberMatcher(text,country):
-            if match.raw_string not in result:
-                result.append(match.raw_string)
-    for i in range(len(result)):
-        result[i] = re.sub(r"[\D]","",result[i])
-    return list(set(result))
+    for item in text_result:
+        result.append("".join(item))
+    return result
+    # result = []
+    # for country in country_abbr_list:
+    #     for match in phonenumbers.PhoneNumberMatcher(text,country):
+    #         if match.raw_string not in result:
+    #             result.append(match.raw_string)
+    # for i in range(len(result)):
+    #     result[i] = re.sub(r"[\D]","",result[i])
+    #return list(set(result))
 
 
 def email_recognition(document,is_raw_content):
@@ -406,14 +406,14 @@ def hair_color_recognition(document,is_raw_content):
     text_without_quotation = re.sub(r'[^\w\s]','',text)
     words = text_without_quotation.split()
     for i in range(len(words)):
-        if fuzz.ratio(words[i].lower(),"hair")>=80: #judge if word and hair are similar
+        if fuzz.ratio(words[i].lower(),"hair")>=75: #judge if word and hair are similar
             color_str = ""
             eye_color = False
             for j in range(i+1,i+6): #look for color vocabulary after hair
                 if j<len(words):
                     if words[j].lower() in color_dic:
                         color_str = words[j].lower()
-                    if fuzz.ratio(words[i].lower(),"eyes")>=80: #check if eyes color is around
+                    if fuzz.ratio(words[i].lower(),"eyes")>=75: #check if eyes color is around
                         eye_color = True
             if color_str:
                 if eye_color:
@@ -451,13 +451,13 @@ def eye_color_recognition(document,is_raw_content):
     text_without_quotation = re.sub(r'[^\w\s]','',text)
     words = text_without_quotation.split()
     for i in range(len(words)):
-        if fuzz.ratio(words[i].lower(),"eyes")>=80: #judge if word and hair are similar
+        if fuzz.ratio(words[i].lower(),"eyes")>=75: #judge if word and hair are similar
             color_str = ""
             hair_color = False
             for j in range(i+1,i+6): #look for color vocabulary after eyes
                 if words[j].lower() in color_dic:
                     color_str = words[j].lower()
-                if fuzz.ratio(words[i].lower(),"hair")>=80: #check if eyes color is around
+                if fuzz.ratio(words[i].lower(),"hair")>=75: #check if eyes color is around
                     hair_color = True
             if color_str:
                 if hair_color:

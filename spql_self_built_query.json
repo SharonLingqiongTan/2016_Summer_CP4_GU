@@ -257,14 +257,14 @@
                             "predicate": "weight"
                         }, 
                         {
-                            "constraint": "Abigail.in.SF@gmail.com", 
+                            "constraint": "Bangkok", 
                             "isOptional": false, 
-                            "predicate": "email"
+                            "predicate": "location"
                         }, 
                         {
                             "isOptional": false, 
-                            "predicate": "eye_color", 
-                            "variable": "?eye_color"
+                            "predicate": "phone", 
+                            "variable": "?phone"
                         }
                     ], 
                     "type": "Ad", 
