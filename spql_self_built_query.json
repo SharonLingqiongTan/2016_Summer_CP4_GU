@@ -43,7 +43,7 @@
                 "where": {
                     "clauses": [
                         {
-                            "constraint": "3343843063", 
+                            "constraint": "(334) 384-3063", 
                             "isOptional": false, 
                             "predicate": "phone"
                         }, 
@@ -145,7 +145,7 @@
                 "where": {
                     "clauses": [
                         {
-                            "constraint": "7185048742", 
+                            "constraint": "718-504-8742", 
                             "isOptional": false, 
                             "predicate": "phone"
                         }, 
@@ -257,14 +257,14 @@
                             "predicate": "weight"
                         }, 
                         {
-                            "constraint": "Bangkok", 
+                            "constraint": "Abigail.in.SF@gmail.com", 
                             "isOptional": false, 
-                            "predicate": "location"
+                            "predicate": "email"
                         }, 
                         {
                             "isOptional": false, 
-                            "predicate": "phone", 
-                            "variable": "?phone"
+                            "predicate": "eye_color", 
+                            "variable": "?eye_color"
                         }
                     ], 
                     "type": "Ad", 
@@ -330,7 +330,7 @@
                 "where": {
                     "clauses": [
                         {
-                            "constraint": "7022187871", 
+                            "constraint": "702-218-7871", 
                             "isOptional": false, 
                             "predicate": "phone"
                         }, 
@@ -364,7 +364,7 @@
                 "where": {
                     "clauses": [
                         {
-                            "constraint": "5142778188", 
+                            "constraint": "514-277-8188", 
                             "isOptional": false, 
                             "predicate": "phone"
                         }, 
@@ -481,7 +481,7 @@
                 "where": {
                     "clauses": [
                         {
-                            "constraint": "7784019922", 
+                            "constraint": "778-401-9922", 
                             "isOptional": false, 
                             "predicate": "phone"
                         }, 
@@ -520,7 +520,7 @@
                 "where": {
                     "clauses": [
                         {
-                            "constraint": "7025179930", 
+                            "constraint": "(702)517-9930", 
                             "isOptional": false, 
                             "predicate": "phone"
                         }, 
@@ -542,6 +542,727 @@
             "query": "15 - WWhat is the weight of the escort in portland with phone number (702)517-9930?", 
             "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?price WHERE { ?ad a qpr:Ad ; qpr:phone '0249613444' ; qpr:posting_date '2016-05-07' ; qpr:price ?price . }"
         }
+    },
+    "Aggregate":{
+        "1223.1": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?review_site", 
+                    "limit": 1, 
+                    "order-variable": "?count"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?review_site"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Capetown, South Africa", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "review_site", 
+                            "variable": "?review_site"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "1 - Please find and list all of the ads in Capetown, South Africa that mention a review site via link, text or image", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?review_site  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Flagstaff, AZ' ; qpr:review_site ?review_site . } GROUP BY ?review_site ORDER BY ?count LIMIT 1"
+        },
+        "1223.2": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?hair_color", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": "\",\"", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?hair_color"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Bangkok,Thailand", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "hair_color", 
+                            "variable": "?hair_color"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "2 - Please find and list all of the ads in Bangkok, Thailand that mention a hair color", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?hair_color (count(?ad) AS ?count)(group_concat(?ad;separator=\",\") AS ?ads) WHERE { ?ad a :Ad ; qpr:location 'Bangkok,Thailand' ; qpr:hair_color ?hair_color . } GROUP BY ?hair_color ORDER BY DESC(?count) LIMIT 1"
+        }, 
+        "1223.3": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?email", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?email"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "5145742069", 
+                            "isOptional": false, 
+                            "predicate": "phone"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "email", 
+                            "variable": "?email"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "3 - Please find and list all of the ads with phone number (514) 574-2069 that mentions an email", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        }, 
+        "1223.4": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?weight", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?weight"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Philadelphia, PA", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "weight", 
+                            "variable": "?weight"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "4 - Please find and list all of the ads in Philadelphia, PA that mention weight", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        }, 
+        "1223.5": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?nationality", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?nationality"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Fargo, ND", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "nationality", 
+                            "variable": "?nationality"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "5 - Please find and list all of the ads in Fargo, ND that mention nationality", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        },
+        "1223.6": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?age", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?age"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Glasgow, Scotland", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "age", 
+                            "variable": "?age"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "6 - Please find and list all of the ads in Glasgow, Scotland that advertise for an escort with age", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        },
+        "1223.7": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?address", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?address"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Delhi, India", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "address", 
+                            "variable": "?address"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "7 - Please find and list all of the ads in Delhi, India that mention a street address", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        },
+        "1223.8": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?phone", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?phone"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Vermont", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "phone", 
+                            "variable": "?phone"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "8 - Please find and list all of the ads in Vermont that mention a phone number", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        },
+        "1223.9": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?social_media_id", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?social_media_id"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Madrid, Spain", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "social_media_id", 
+                            "variable": "?social_media_id"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "9 - Please find and list all of the ads in Madrid, Spain that mention a social media ID", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        },
+        "1223.10": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?eye_color", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?eye_color"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "San Francisco, CA", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "eye_color", 
+                            "variable": "?eye_color"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "10 - Please find and list all of the ads in San Francisco, CA that mention a eye color", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        },
+        "1223.11": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?service", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?service"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Fayetteville, AR", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "service", 
+                            "variable": "?service"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "11 - Please find and list all of the ads in Fayetteville, AR that mention a service", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        },
+        "1223.12": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?number_of_providers", 
+                    "limit": 1, 
+                    "order-variable": "?count"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?number_of_providers"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Flagstaff, AZ", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "number_of_providers", 
+                            "variable": "?number_of_providers"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "12 - Please find and list all of the ads in Flagstaff, AZ that indicates multi providers", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?number_of_individuals (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Rochester, NY' ; qpr:number_of_individuals ?number_of_individuals .  } GROUP BY ?number_of_individuals ORDER BY ?count LIMIT 1"
+        },
+        "1223.13": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?height", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?height"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Arlington, VA", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "height", 
+                            "variable": "?height"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "13 - Please find and list all of the ads in Arlington, VA that mentions a height", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        },
+        "1223.14": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?phone", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?phone"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Seattle, WA", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "phone", 
+                            "variable": "?phone"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "14 - Please find and list all of the ads in Seattle, WA that mentions phone", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        },
+        "1223.15": {
+            "parsed": {
+                "group-by": {
+                    "group-variable": "?email", 
+                    "limit": 1, 
+                    "order-variable": "?count", 
+                    "sorted-order": "desc"
+                }, 
+                "select": {
+                    "variables": [
+                        {
+                            "dependent-variable": "?count", 
+                            "type": "count", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "dependent-variable": "?ads", 
+                            "distinct": false, 
+                            "separator": ",", 
+                            "type": "group-concat", 
+                            "variable": "?ad"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?email"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Fargo, ND", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "email", 
+                            "variable": "?email"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "15 - Please find and list all of the ads in Fargo, ND that mention an email", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ethnicity  (count(?ad) AS ?count)(group_concat(?ad;separator=',') AS ?ads) WHERE { ?ad a qpr:Ad ; qpr:location 'Seattle, WA' ; qpr:ethnicity ?ethnicity . } GROUP BY ?ethnicity ORDER BY DESC(?count) LIMIT 1"
+        }
+
     }
 }   
 
