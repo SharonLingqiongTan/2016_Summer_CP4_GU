@@ -955,3 +955,9 @@ if __name__ != "__main__":
     line = f.readlines()[0]
     country_abbr_list = yaml.load(line)
 
+    global state_abbr_dic
+    state_abbr_path = "state_abbr"
+    w = open(state_abbr_path)
+    state_abbr_dic = json.load(w)
+    w.close()
+

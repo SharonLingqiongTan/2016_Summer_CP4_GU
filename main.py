@@ -1,5 +1,5 @@
 __author__ = 'infosense'
-import sys,json,datetime,os
+import sys,json,datetime,os,re
 import yaml
 from fuzzywuzzy import fuzz
 import search,extraction,ebola_html_dealer
@@ -11,12 +11,12 @@ def main():
     query_list = search.query_retrival(query_path)
     answer_dic = []
     for query in query_list:
-        if query["type"] == "pointfact" and query["id"] == "1222.10":
+        if query["type"] == "pointfact" and query["id"] == "1222.12":
             filepath = "pointfact/"+query["id"]
             parsed_query_dic = search.query_parse(query)
             print(parsed_query_dic)
             query_body = search.query_body_build(parsed_query_dic)
-            print(query_body)
+            #print(query_body)
             documents = search.elastic_search(query_body)
             annotated_raw_contents = []
             annotated_clean_contents = []
@@ -336,14 +336,16 @@ def answer_extraction(document,parsed_query_dic):
         #         document["meta_text_percentage"] += 1
         #look for the extraction in raw content
         raw_result = extraction.functionDic[feature](document,True)
-        extraction_result[feature] = raw_result
+        result = extraction.functionDic[feature](document,False)
+        if result:
+            extraction_result[feature] = list(set(raw_result) & set(result)) #return those results that are both in the raw_content and extracted_text
+        else:
+            extraction_result[feature] = raw_result
         # match_frequency += len(raw_result)
         # if raw_result:
         #     document["raw_content_percentage"] += 1.0
         #     extraction_result["extraction_score"] += 3
         #look for the extraction in extracted text
-        result = extraction.functionDic[feature](document,False)
-        extraction_result[feature] = list(set(raw_result+result))
         # match_frequency += len(result)
         # if result:
         #     document["extract_text_percentage"] += 1.0
@@ -354,10 +356,15 @@ def answer_extraction(document,parsed_query_dic):
     return extraction_result
 
 def validate(document, parsed_query): # Need to write
-    text = extraction.get_raw_content(document)
+    """
+    :param document: Dictionary
+    :param parsed_query: Dictionary Parsed query in dictionary format providing validation fields
+    :return: if the document satisfies the required conditions in query
+    """
+    raw_content = extraction.get_raw_content(document)
     extract_text = extraction.get_text(document)
-    matchword = parsed_query["required_match_field"]  # dict
-    lower_text = text.lower()
+    matchword = parsed_query["required_match_field"]  #Validation fields
+    lower_raw_content = raw_content.lower()
     lower_extract_text = extract_text.lower()
     if "validation_score" not in document:
         document["validation_score"] = 0
@@ -368,64 +375,91 @@ def validate(document, parsed_query): # Need to write
         # if extraction.is_metadata(document):
         #     if feature in document["_source"]["extracted_metadata"]:
         #         meta_datascore += 1.0
+        isValid = False
+        #Check first if the feature value in text or not
         if type(matchword[feature]) is list:
-            isValid = False
-            for item in matchword[feature]:
-                if item.lower() in lower_text:
+            for value in matchword[feature]:
+                if value.lower() in lower_raw_content or value.lower() in lower_extract_text: #Either in the raw_content or extract_text is regarded as valid
                     isValid = True
                     # score += 1.0   #add 3 points if one of the attributes validates
                     break
-            for item in matchword[feature]:
-                if item.lower() in lower_extract_text:
-                    isValid = True
-                    # extract_score += 1.0   #add 3 points if one of the attributes validates
-                    break
+            # for item in matchword[feature]:
+            #     if item.lower() in lower_extract_text:
+            #         isValid = True
+            #         # extract_score += 1.0   #add 3 points if one of the attributes validates
+            #         break
         else:
-            isValid = False
             if feature == "location":
                 location_fields = [field.strip() for field in matchword[feature].split(",")]
-                for i in range(len(location_fields)):
-                    if location_fields[i].lower() in lower_text:
-                        #score += 1.0/len(location_fields)
-                        isValid = True
-                    if location_fields[i].lower() in lower_extract_text:
-                        #extract_score += 1.0/len(location_fields)
-                        isValid = True
-                        # isValid = True
-                #     else:
-                #         return False
+                # for i in range(len(location_fields)):
+                #     if location_fields[i].lower() in lower_text:
+                #         #score += 1.0/len(location_fields)
+                #         isValid = True
+                #     if location_fields[i].lower() in lower_extract_text:
+                #         #extract_score += 1.0/len(location_fields)
+                #         isValid = True
+                #         # isValid = True
+                # #     else:
+                # #         return False
+                location_fields = [field.strip() for field in matchword[feature].split(",")]
+                for location_field in location_fields:
+                    if location_field in extraction.state_abbr_dic: #Validate state should be case sensitive
+                        state_pattern = r"(?:[^A-Za-z])("+location_field+")(?:[^A-Za-z])"
+                        if re.search(state_pattern,raw_content) or re.search(state_pattern,extract_text) or extraction.state_abbr_dic[location_field].lower() in lower_extract_text or extraction.state_abbr_dic[location_field].lower in lower_raw_content: #Check if a state abbr or its full name is in raw_content or extracted_text field
+                            isValid = True
+                    else:
+                        if location_field.lower() in lower_raw_content or location_field.lower() in lower_extract_text:
+                            isValid = True
             else:
-                if matchword[feature].lower() in lower_text:
-                    # score += 1.0
+                if matchword[feature].lower() in lower_raw_content or matchword[feature].lower() in lower_extract_text:
                     isValid = True
-                if matchword[feature].lower() in lower_extract_text:
-                    # extract_score += 1.0
-                    isValid = True
-            if isValid:
-                continue
+                # if matchword[feature].lower() in lower_raw_content:
+                #     # score += 1.0
+                #     isValid = True
+                # if matchword[feature].lower() in lower_extract_text:
+                #     # extract_score += 1.0
+                #     isValid = True
+        if isValid:
+            continue
         # if score == 0:
         results = extraction.functionDic[feature](document,True)
-        isValid = False
-        #print(results)
-        if results:
-            #isValid = False
-            #print(results)
-            for result in results:
-                if fuzz.ratio(str(result),matchword[feature])>=80:
-                    # score += 1.0
-                    # break
+        # if results:
+        #     #isValid = False
+        #     #print(results)
+        #     for result in results:
+        #         if fuzz.ratio(str(result),matchword[feature])>=80:
+        #             # score += 1.0
+        #             # break
+        #             isValid = True
+        #             break
+        # # else:
+        # #     return False
+        # if extract_text:
+        #     results = extraction.functionDic[feature](document,False)
+        #     if results:
+        #         #isValid = False
+        #         #print(results)
+        #         for result in results:
+        #             if fuzz.ratio(str(result),matchword[feature])>=80:
+        #                 #score += 1.0
+        #                 isValid = True
+        #                 break
+        for result in results:
+            if feature == "phone": #phone number has to be exactly the same while other features tolerate some minor difference
+                if result == re.sub("\D","",matchword[feature]):
                     isValid = True
-                    break
-        # else:
-        #     return False
+            else:
+                if fuzz.ratio(str(result),matchword[feature])>=80:
+                    isValid = True
+            break
         if extract_text:
             results = extraction.functionDic[feature](document,False)
-            if results:
-                #isValid = False
-                #print(results)
-                for result in results:
+            for result in results:
+                if feature == "phone": #phone number has to be exactly the same while other features tolerate some minor difference
+                    if result == re.sub("\D","",matchword[feature]):
+                        isValid = True
+                else:
                     if fuzz.ratio(str(result),matchword[feature])>=80:
-                        #score += 1.0
                         isValid = True
                         break
         if isValid:
