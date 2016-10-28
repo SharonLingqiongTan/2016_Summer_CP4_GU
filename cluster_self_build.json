@@ -1,0 +1,370 @@
+        "1224.1": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?cluster"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "5105124396", 
+                            "isOptional": false, 
+                            "predicate": "seed:"
+                        }, 
+                        {
+                            "constraint": "female", 
+                            "isOptional": false, 
+                            "predicate": "gender"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ad", 
+                            "variable": "?ad"
+                        }
+                    ], 
+                    "type": "cluster", 
+                    "variable": "?cluster"
+                }
+            }, 
+            "query": "1 - Please find and list all of the ads connected via a shared phone number, email, or street address to the phone number 5105124396 that features a female escort", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed: '2131743855' ; qpr:ethnicity: 'white' ; qpr:ad ?ad . }"
+        }, 
+        "1224.2": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?cluster"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "380685070797", 
+                            "isOptional": false, 
+                            "predicate": "seed:"
+                        }, 
+                        {
+                            "constraint": "female", 
+                            "isOptional": false, 
+                            "predicate": "gender"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ad", 
+                            "variable": "?ad"
+                        }
+                    ], 
+                    "type": "cluster", 
+                    "variable": "?cluster"
+                }
+            }, 
+            "query": "2 - Please find and list all of the ads connected via a shared phone number, email, or street address to the phone number 380685070797 that feature a female escort", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed: '2131743855' ; qpr:ethnicity: 'white' ; qpr:ad ?ad . }"
+        }, 
+        "1224.3": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?cluster"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "6464809094", 
+                            "isOptional": false, 
+                            "predicate": "seed:"
+                        }, 
+                        {
+                            "constraint": "male", 
+                            "isOptional": false, 
+                            "predicate": "gender"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ad", 
+                            "variable": "?ad"
+                        }
+                    ], 
+                    "type": "cluster", 
+                    "variable": "?cluster"
+                }
+            }, 
+            "query": "3 - Please find and list all of the ads connected via a shared phone number, email, or street address to the phone number 6464809094 that feature a male escort.", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed: '2131743855' ; qpr:ethnicity: 'white' ; qpr:ad ?ad . }"
+        },
+        "1224.4": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?cluster"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "11991066691", 
+                            "isOptional": false, 
+                            "predicate": "seed"
+                        }, 
+                        {
+                            "constraint": "Samanta", 
+                            "isOptional": false, 
+                            "predicate": "name"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ad", 
+                            "variable": "?ad"
+                        }
+                    ], 
+                    "type": "cluster", 
+                    "variable": "?cluster"
+                }
+            }, 
+            "query": "4.Please find and list all of the ads connected via a shared phone number, email, or street address to the phone number 11991066691 that also use the name Samanta in the ad text.", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed '2508130801' ; qpr:name 'Co Co' ; qpr:ad ?ad . }"
+        }, 
+        "1224.5": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?cluster"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "9253051222", 
+                            "isOptional": false, 
+                            "predicate": "seed"
+                        }, 
+                        {
+                            "constraint": "kandy", 
+                            "isOptional": false, 
+                            "predicate": "name"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ad", 
+                            "variable": "?ad"
+                        }
+                    ], 
+                    "type": "cluster", 
+                    "variable": "?cluster"
+                }
+            }, 
+            "query": "5 - Please find and list all of the ads connected via a shared phone number, email, or street address to the phone number 9253051222 that use the name kandy.", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed '2508130801' ; qpr:name 'Co Co' ; qpr:ad ?ad . }"
+        },
+        "1224.6": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?cluster"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "3863346213", 
+                            "isOptional": false, 
+                            "predicate": "seed"
+                        }, 
+                        {
+                            "constraint": "florida", 
+                            "isOptional": false, 
+                            "predicate": "location"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ad", 
+                            "variable": "?ad"
+                        }
+                    ], 
+                    "type": "cluster", 
+                    "variable": "?cluster"
+                }
+            }, 
+            "query": "6 - Please find and list all of the ads connected via a shared phone number, email, or street address to the phone number 3863346213 that is in florida.", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed '2508130801' ; qpr:name 'Co Co' ; qpr:ad ?ad . }"
+        },
+        "1224.7": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?cluster"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "easytoremember@mail.ua", 
+                            "isOptional": false, 
+                            "predicate": "seed"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ad", 
+                            "variable": "?ad"
+                        }
+                    ], 
+                    "type": "cluster", 
+                    "variable": "?cluster"
+                }
+            }, 
+            "query": "7 - Please find and list all of the ads connected via a shared phone number, email, or street address to the email easytoremember@mail.ua.", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed '2508130801' ; qpr:name 'Co Co' ; qpr:ad ?ad . }"
+        },
+        "1224.8": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?cluster"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "mojoentertainment@outlook.com", 
+                            "isOptional": false, 
+                            "predicate": "seed"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ad", 
+                            "variable": "?ad"
+                        }
+                    ], 
+                    "type": "cluster", 
+                    "variable": "?cluster"
+                }
+            }, 
+            "query": "8.Please find and list all of the ads connected via a shared phone number, email, or street address to the email mojoentertainment@outlook.com", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed 'easytoremember@mail.ua' ; qpr:ad ?ad . }"
+        }, 
+        "1224.9": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?cluster"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Phoenix01skye@gmail.com", 
+                            "isOptional": false, 
+                            "predicate": "seed"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ad", 
+                            "variable": "?ad"
+                        }
+                    ], 
+                    "type": "cluster", 
+                    "variable": "?cluster"
+                }
+            }, 
+            "query": "9 - Please find and list all of the ads connected via a shared phone number, email, or street address to the email Phoenix01skye@gmail.com", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed 'easytoremember@mail.ua' ; qpr:ad ?ad . }"
+        }, 
+        "1224.10": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?cluster"
+                        }, 
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        }
+                    ]
+                }, 
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Abigail.in.SF@gmail.com", 
+                            "isOptional": false, 
+                            "predicate": "seed"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "ad", 
+                            "variable": "?ad"
+                        }
+                    ], 
+                    "type": "cluster", 
+                    "variable": "?cluster"
+                }
+            }, 
+            "query": "10 - Please find and list all of the ads connected via a shared phone number, email, or street address to the email Abigail.in.SF@gmail.com", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed 'easytoremember@mail.ua' ; qpr:ad ?ad . }"
+        }
