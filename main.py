@@ -11,48 +11,51 @@ def main():
     query_list = search.query_retrival(query_path)
     answer_dic = []
     for query in query_list:
-        if query["type"] == "pointfact" and query["id"] == "1222.12":
-            filepath = "pointfact/"+query["id"]
+        if query["type"] == "cluster":
+            #print(query)
+            filepath = "cluster/"+query["id"]
             parsed_query_dic = search.query_parse(query)
-            print(parsed_query_dic)
-            query_body = search.query_body_build(parsed_query_dic)
-            #print(query_body)
-            documents = search.elastic_search(query_body)
-            annotated_raw_contents = []
-            annotated_clean_contents = []
-            if "location" in str(parsed_query_dic) or "name" in str(parsed_query_dic):
-                annotated_raw_contents,annotated_clean_contents = annotator(documents)
-            else:
-                annotated_raw_contents,annotated_clean_contents = [],[]
-            #print(len(documents))
-            print(len(annotated_clean_contents),len(annotated_raw_contents))
+            #print(parsed_query_dic)
             result = []
-            for i in range(len(documents)):
+            if query["type"] == "cluster":
+                result = cluster(query,5)
+            else:
+                query_body = search.query_body_build(parsed_query_dic)
+                #print(query_body)
+                documents = search.elastic_search(query_body)
+                annotated_raw_contents = []
+                annotated_clean_contents = []
                 if "location" in str(parsed_query_dic) or "name" in str(parsed_query_dic):
-                    documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
-                    documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
-                # output_filepath = "/Users/infosense/Desktop/test"
-                # document_path = os.path.join(output_filepath,str(i))
-                # w = open(document_path,"w")
-                # extractions = {}
-                # for func_name,func in extraction.functionDic.items():
-                #     extractions["raw_"+func_name] = func(documents[i],True)
-                #     extractions[func_name] = func(documents[i],False)
-                # documents[i]["indexing"] = extractions
-                # json.dump(documents[i],w)
-                # w.close()
-                if validate(documents[i],parsed_query_dic):
-                    answer = answer_extraction(documents[i],parsed_query_dic)
-                    #print(answer)
-                    #if len(answer)>0:
-                    dic = {}
-                    dic["id"] = documents[i]["_id"]
-                    # dic["validation_score"] = documents[i]["validation_score"]
-                    # dic["els_score"] = documents[i]["_score"]
-                    # dic["extraction_score"] = answer["extraction_score"]
-                    # dic["feature"] = extraction.generate_feature_score(document)
-                    dic.update(answer)
-                    result.append(dic)
+                    annotated_raw_contents,annotated_clean_contents = annotator(documents)
+                else:
+                    annotated_raw_contents,annotated_clean_contents = [],[]
+                #print(len(documents))
+                #print(len(annotated_clean_contents),len(annotated_raw_contents))
+                for i in range(len(documents)):
+                    if "location" in str(parsed_query_dic) or "name" in str(parsed_query_dic):
+                        documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
+                        documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
+                    # output_filepath = "/Users/infosense/Desktop/test"print
+                    # w = open(document_path,"w")
+                    # extractions = {}
+                    # for func_name,func in extraction.functionDic.items():
+                    #     extractions["raw_"+func_name] = func(documents[i],True)
+                    #     extractions[func_name] = func(documents[i],False)
+                    # documents[i]["indexing"] = extractions
+                    # json.dump(documents[i],w)
+                    # w.close()
+                    if validate(documents[i],parsed_query_dic):
+                        answer = answer_extraction(documents[i],parsed_query_dic)
+                        #print(answer)
+                        #if len(answer)>0:
+                        dic = {}
+                        dic["id"] = documents[i]["_id"]
+                        # dic["validation_score"] = documents[i]["validation_score"]
+                        # dic["els_score"] = documents[i]["_score"]
+                        # dic["extraction_score"] = answer["extraction_score"]
+                        # dic["feature"] = extraction.generate_feature_score(document)
+                        dic.update(answer)
+                        result.append(dic)
             #print(result)
             final_result = generate_formal_answer(query,result)
             answer_dic.append(final_result)
@@ -200,31 +203,31 @@ def build_dictionary(search_result, current_query, searched_ads):
             #print(current_query)
             if validate(result, current_query):
                 # print("Pass validation")
-                email = list(set(extraction.email_recognition(result)))
-                phone = list(set(extraction.phone_recognition(result)))
-                address = list(set(extraction.physical_address_recognition(result)))
+                email = list(set(extraction.email_recognition(result,True)))
+                phone = list(set(extraction.phone_recognition(result,True)))
+                address = list(set(extraction.physical_address_recognition(result,True)))
                 dic[adID] = {}
                 dic[adID]["email"] = email
                 dic[adID]["phone"] = phone
                 dic[adID]["address"] = address
-                dic[adID]["validation_score"] = result["validation_score"]
-                dic[adID]["els_score"] = result["_score"]
-                dic[adID]["extraction_score"] = 0
-                if email:
-                    dic[adID]["extraction_score"] += 3
-                if phone:
-                    dic[adID]["extraction_score"] += 3
-                if address:
-                    dic[adID]["extraction_score"] += 3
+                # dic[adID]["validation_score"] = result["validation_score"]
+                # dic[adID]["els_score"] = result["_score"]
+                # dic[adID]["extraction_score"] = 0
+                # if email:
+                #     dic[adID]["extraction_score"] += 3
+                # if phone:
+                #     dic[adID]["extraction_score"] += 3
+                # if address:
+                #     dic[adID]["extraction_score"] += 3
                 dicts.append(dic)
     return dicts
 
 def generate_formal_answer(query,result):
     final_result = {}
     final_result["question_id"] = query["id"]
-    validate_coeff = 0.6
-    extraction_coeff = 0.4
-    els_coeff = 0.2
+    # validate_coeff = 0.6
+    # extraction_coeff = 0.4
+    # els_coeff = 0.2
     if query["type"] == "cluster":
         ad_list = []
         for ad in result:
@@ -232,9 +235,9 @@ def generate_formal_answer(query,result):
             ad_dic["?cluster"] = get_cluster_seed(query)
             key,value = ad.items()[0]
             ad_dic["?ad"] = key
-            ad_dic["score"] = validate_coeff*ad[key]["validation_score"]+extraction_coeff*ad[key]["extraction_score"]+els_coeff*ad[key]["els_score"]
+            #ad_dic["score"] = validate_coeff*ad[key]["validation_score"]+extraction_coeff*ad[key]["extraction_score"]+els_coeff*ad[key]["els_score"]
             ad_list.append(ad_dic)
-        ad_list.sort(key= lambda k:k["score"],reverse=True)
+        #ad_list.sort(key= lambda k:k["score"],reverse=True)
         final_result["answers"] = ad_list
     elif query["type"] == "pointfact":
         select_answer_number = len(result)
@@ -254,7 +257,7 @@ def generate_formal_answer(query,result):
         #         result.sort(key = lambda k:k[group_by["order-variable"][1:]][0])
         #     # if "limit" in group_by:
         #     #     select_answer_number = min(len(result),group_by["limit"])
-        print(result)
+        #print(result)
         final_result["answers"] = []
         answer_field = ""
         score_list = ["extraction_score","validation_score","id","els_score"]
@@ -262,7 +265,7 @@ def generate_formal_answer(query,result):
             for key,value in result[0].items():
                 if key not in score_list:
                     answer_field = key
-        print(answer_field)
+        #print(answer_field)
         for i in range(select_answer_number):
             answer_dic = {}
             answer_dic["?ad"] = result[i]["id"]
@@ -285,7 +288,7 @@ def generate_formal_answer(query,result):
         group_variable = group_by["group-variable"]
         feature = group_variable[1:]
         dic = {}
-        f = open("feature.txt","w")
+        #f = open("feature.txt","w")
         # for i in range(len(result)):
         #     result[i]["score"] = validate_coeff*result[i]["validation_score"]+extraction_coeff*result[i]["extraction_score"]+els_coeff*result[i]["els_score"]
         #     f.write(extraction.write_feature_score(result[i]["feature"],query["id"],result[i]["id"]))
@@ -405,7 +408,7 @@ def validate(document, parsed_query): # Need to write
                 for location_field in location_fields:
                     if location_field in extraction.state_abbr_dic: #Validate state should be case sensitive
                         state_pattern = r"(?:[^A-Za-z])("+location_field+")(?:[^A-Za-z])"
-                        if re.search(state_pattern,raw_content) or re.search(state_pattern,extract_text) or extraction.state_abbr_dic[location_field].lower() in lower_extract_text or extraction.state_abbr_dic[location_field].lower in lower_raw_content: #Check if a state abbr or its full name is in raw_content or extracted_text field
+                        if re.search(state_pattern,raw_content) or re.search(state_pattern,extract_text) or extraction.state_abbr_dic[location_field].lower() in lower_extract_text or extraction.state_abbr_dic[location_field].lower() in lower_raw_content: #Check if a state abbr or its full name is in raw_content or extracted_text field
                             isValid = True
                     else:
                         if location_field.lower() in lower_raw_content or location_field.lower() in lower_extract_text:

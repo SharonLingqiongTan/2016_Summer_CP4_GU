@@ -195,9 +195,15 @@ def review_site_recognition(document,is_raw_content):
 def name_recognition(document,is_raw_content):
     annotated_text = ""
     if is_raw_content:
-        annotated_text = document["annotated_raw_content"]
+        if "annotated_raw_content" in document:
+            annotated_text = document["annotated_raw_content"]
+        else:
+            annotated_text = search.annotation(get_raw_content(document))
     else:
-        annotated_text = document["annotated_clean_content"]
+        if "annotated_clean_content" in document:
+            annotated_text = document["annotated_clean_content"]
+        else:
+            annotated_text = search.annotation(get_text(document))
     name_pattern = re.compile(r"\<PERSON\>(.*?)\</PERSON>")
     name_pattern_result = re.findall(name_pattern,annotated_text)
     result = []
@@ -214,9 +220,15 @@ def location_recognition(document,is_raw_content):
     #     text = get_text(document)
     annotated_text = ""
     if is_raw_content:
-        annotated_text = document["annotated_raw_content"]
+        if "annotated_raw_content" in document:
+            annotated_text = document["annotated_raw_content"]
+        else:
+            annotated_text = search.annotation(get_raw_content(document))
     else:
-        annotated_text = document["annotated_clean_content"]
+        if "annotated_clean_content" in document:
+            annotated_text = document["annotated_clean_content"]
+        else:
+            annotated_text = search.annotation(get_text(document))
     location_arr = re.findall(r"\<LOCATION\>(.*?)\</LOCATION\>",annotated_text)
     #print(document)
     result = []
@@ -532,12 +544,16 @@ def height_recognition(document,is_raw_content):
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    height_pattern = re.compile(r"(([1-9])'[\W]?(([0-9])\")?)")
+    #inch pattern
+    height_pattern = r"(?:^|\W)([3-9])'[ ]?([0-9])?(?:\")?"
     height_pattern_result = re.findall(height_pattern,text)
     result = []
-    if len(height_pattern_result)>0:
-        for item in height_pattern_result:
-            result.append(item[0])
+    for item in height_pattern_result:
+        if item[1]: #inch is present
+            result.append(str(int(item[0])*12+int(item[1])))
+        else:
+            result.append(str(int(item[0])*12))
+    #cm pattern
     return result
 
 def weight_recognition(document,is_raw_content):

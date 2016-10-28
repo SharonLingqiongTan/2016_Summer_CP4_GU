@@ -1,3 +1,4 @@
+    "Cluster": {
         "1224.1": {
             "parsed": {
                 "select": {
@@ -368,3 +369,4 @@
             "query": "10 - Please find and list all of the ads connected via a shared phone number, email, or street address to the email Abigail.in.SF@gmail.com", 
             "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?cluster ?ad WHERE {   ?cluster a qpr:cluster ; qpr:seed 'easytoremember@mail.ua' ; qpr:ad ?ad . }"
         }
+    }
