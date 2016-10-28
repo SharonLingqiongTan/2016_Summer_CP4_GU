@@ -365,8 +365,9 @@ def price_recognition(document,is_raw_content):
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    price1 = "(?:\d+\.)?\d+,\d+"
-    price2 = "(^(\$|€|¥|£|$|Fr|¥|kr|Ꝑ|ք|₩|R|(R$)|₺|₹)\d+)"
+    price1 = "(\d+,)?(\d+\.)?\d+"
+    # price2 = "(^(\$|€|¥|£|$|Fr|¥|kr|Ꝑ|ք|₩|R|(R$)|₺|₹)\d+)"
+    price2 = "((\$|€|¥|£|Fr|kr|Ꝑ)\d+)"
     units = "(Z|zero)|(O|one)|(T|two)|(T|three)|(F|four)|(F|five)|(S|six)|(S|seven)|(E|eight)|(N|nine)|(T|ten)|(E|eleven)|(T|twelve)|(T|thirteen)|(F|fourteen)|(F|fifteen)|(S|sixteen)|(S|seventeen)|(E|eighteen)|(N|nineteen)"
     tens = "(T|ten)|(T|twenty)|(T|thirty)|(F|forty)|(F|fourty)|(F|fifty)|(S|sixty)|(S|seventy)|(E|eighty)|(N|ninety)"
     hundred = "(H|hundred)"
@@ -374,22 +375,41 @@ def price_recognition(document,is_raw_content):
     OPT_DASH = "-?"
     price3 = "(" + units + OPT_DASH + "(" + thousand + ")?" + OPT_DASH + "(" + units + OPT_DASH + hundred + ")?" + OPT_DASH + "(" + tens + ")?" + ")" + "|" + "(" + tens + OPT_DASH + "(" + units + ")?" + ")"
     price4 = "\d+"
+    # price5 = "(\d+(\$|€|¥|£|$|Fr|¥|kr|Ꝑ|ք|₩|R|(R$)|₺|₹)$)"
+    price5 = "(\d+(\$|€|¥|£|Fr|kr|Ꝑ))"
     preDollarPrice = [price1, price3, price4]
+    otherPrice = [price2, price5]
     split = text.split(" ")
-    priceList = {}
+    priceList = []
+    currency = ["$", "€", "¥", "£", "$", "Fr", "¥", "kr", "Ꝑ", "ք", "₩", "R", "R$", "₺", "₹"]
+    pre_price_indicator = ["Hour:", "night:", "price:", "Price:", "Hourly"]
+    post_price_indicator = ["dollar", "dollars", "jewel", "jewels", "rose", "roses", "/hour", "/Hour", "/HOUR", "/night", "/Night", "/NIGHT", "$"] 
     for i in range(len(split)):
-        if split[i] == "dollar" or split[i] == "dollars":
+        if split[i] in post_price_indicator:
             for pricePat in preDollarPrice:
+                print((split[i], split[i - 1]))
                 price = re.findall(pricePat, split[i - 1])
                 if price:
-                    priceList[i-1] = split[i - 1] + " " + split[i]
+                    priceList.append('$' + re.sub('\D', '', split[i - 1]))  
                     #print(priceList[i-1])
+        elif split[i] in pre_price_indicator:
+            for pricePat in preDollarPrice:
+                price = re.findall(pricePat, split[i + 1])
+                if price:
+                    print((split[i], split[i + 1]))
+                    for cur in currency:
+                        if cur in split[i + 1]:
+                            priceList.append(cur + re.sub('\D', '', split[i + 1]))
+                        else:
+                            priceList.append('$' + re.sub('\D', '', split[i + 1]))
         else:
-            price = re.findall(price2, split[i])
-            if price:
-                priceList[i] = price[0][0]
+            for pricePat in otherPrice:
+                price = re.findall(pricePat, split[i])
+                if price:
+                    priceList.append(price[0][0])
+                    print(price[0][0])
                 #print(priceList[i])
-    return priceList.items()
+    return(priceList)
 
 def hair_color_recognition(document,is_raw_content):
     text = ""
