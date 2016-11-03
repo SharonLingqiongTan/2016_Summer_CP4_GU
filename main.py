@@ -1,5 +1,6 @@
 __author__ = 'infosense'
 import sys,json,datetime,os,re
+from datetime import datetime
 import yaml
 from fuzzywuzzy import fuzz
 import search,extraction,ebola_html_dealer
@@ -9,13 +10,14 @@ def main():
     sys.setdefaultencoding("utf-8")
     query_path = "spql_self_built_query.json"
     query_list = search.query_retrival(query_path)
-    answer_dic = []
     for query in query_list:
-        if query["type"] == "cluster":
+        start = datetime.now()
+        answer_dic = []
+        if query["type"] == "aggregate" and query["id"] == "1223.7":
             #print(query)
-            filepath = "cluster/"+query["id"]
+            filepath = "aggregate/"+query["id"]
             parsed_query_dic = search.query_parse(query)
-            #print(parsed_query_dic)
+            print(parsed_query_dic)
             result = []
             if query["type"] == "cluster":
                 result = cluster(query,5)
@@ -29,8 +31,8 @@ def main():
                     annotated_raw_contents,annotated_clean_contents = annotator(documents)
                 else:
                     annotated_raw_contents,annotated_clean_contents = [],[]
-                #print(len(documents))
-                #print(len(annotated_clean_contents),len(annotated_raw_contents))
+                print(len(documents))
+                print(len(annotated_clean_contents),len(annotated_raw_contents))
                 for i in range(len(documents)):
                     if "location" in str(parsed_query_dic) or "name" in str(parsed_query_dic):
                         documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
@@ -48,20 +50,23 @@ def main():
                         answer = answer_extraction(documents[i],parsed_query_dic)
                         #print(answer)
                         #if len(answer)>0:
-                        dic = {}
-                        dic["id"] = documents[i]["_id"]
-                        # dic["validation_score"] = documents[i]["validation_score"]
-                        # dic["els_score"] = documents[i]["_score"]
-                        # dic["extraction_score"] = answer["extraction_score"]
-                        # dic["feature"] = extraction.generate_feature_score(document)
-                        dic.update(answer)
-                        result.append(dic)
+                        if answer:
+                            print(answer)
+                            dic = {}
+                            dic["id"] = documents[i]["_id"]
+                            # dic["validation_score"] = documents[i]["validation_score"]
+                            # dic["els_score"] = documents[i]["_score"]
+                            # dic["extraction_score"] = answer["extraction_score"]
+                            # dic["feature"] = extraction.generate_feature_score(document)
+                            dic.update(answer)
+                            result.append(dic)
             #print(result)
             final_result = generate_formal_answer(query,result)
-            answer_dic.append(final_result)
+            final_result["timelog"] = (datetime.now()-start).seconds
+            #answer_dic.append(final_result)
             #print(answer_dic)
             f = open(filepath,"w")
-            json.dump(answer_dic,f)
+            json.dump(final_result,f)
             f.close()
 
 def annotator(documents):
@@ -71,19 +76,21 @@ def annotator(documents):
     """
     #print(datetime.datetime.now())
     para_size = 300 #how many documents are annotated every time
-    para_num = len(documents)/para_size
+    para_num,remainder = divmod(len(documents),para_size)
+    if remainder:
+        para_num += 1
     separator = "wjxseparator" #used to join raw_content from different documents, combine them and annotate at one time
     indexed_raw_result = []
     indexed_clean_result = []
     for i in range(para_num):
         raw_contents = []
         clean_contents = []
-        for j in range(i*para_size,(i+1)*para_size):
-            raw_content = documents[j]["_source"]["raw_content"]
+        for document in documents[i*para_size:(i+1)*para_size]:
+            raw_content = document["_source"]["raw_content"]
             raw_contents.append(raw_content)
             clean_content = ""
-            if "extracted_text" in documents[j]["_source"] and documents[j]["_source"]["extracted_text"]:
-                clean_content = documents[j]["_source"]["extracted_text"]
+            if "extracted_text" in document["_source"] and document["_source"]["extracted_text"]:
+                clean_content = document["_source"]["extracted_text"]
             else:
                 clean_content = ebola_html_dealer.make_clean_html(raw_content)
             clean_contents.append(clean_content)
@@ -205,7 +212,7 @@ def build_dictionary(search_result, current_query, searched_ads):
                 # print("Pass validation")
                 email = list(set(extraction.email_recognition(result,True)))
                 phone = list(set(extraction.phone_recognition(result,True)))
-                address = list(set(extraction.physical_address_recognition(result,True)))
+                address = list(set(extraction.address_recognition(result,True)))
                 dic[adID] = {}
                 dic[adID]["email"] = email
                 dic[adID]["phone"] = phone
@@ -272,7 +279,7 @@ def generate_formal_answer(query,result):
             #answer_dic["score"] = validate_coeff*result[i]["validation_score"]+extraction_coeff*result[i]["extraction_score"]+els_coeff*result[i]["els_score"]
             try:
                 if result[i][answer_field]:
-                    answer_field_value = result[i][answer_field][0]
+                    answer_field_value = result[i][answer_field][0]  #Return the first element
                     if answer_field == "posting_date":
                         answer_field_value_str = str(answer_field_value)
                         answer_field_value = str(answer_field_value_str)[0:4]+"-"+str(answer_field_value_str)[4:6]+"-"+str(answer_field_value_str)[6:]
@@ -340,10 +347,17 @@ def answer_extraction(document,parsed_query_dic):
         #look for the extraction in raw content
         raw_result = extraction.functionDic[feature](document,True)
         result = extraction.functionDic[feature](document,False)
-        if result:
-            extraction_result[feature] = list(set(raw_result) & set(result)) #return those results that are both in the raw_content and extracted_text
+        if result and raw_result:
+            intersection = list(set(raw_result) & set(result)) #return those results that are both in the raw_content and extracted_text
+            if intersection:
+                extraction_result[feature] = intersection
+            else:
+                extraction_result[feature] = result
         else:
-            extraction_result[feature] = raw_result
+            if result:
+                extraction_result[feature] = result
+            if raw_result:
+                extraction_result[feature] = raw_result
         # match_frequency += len(raw_result)
         # if raw_result:
         #     document["raw_content_percentage"] += 1.0

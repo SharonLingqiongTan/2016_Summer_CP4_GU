@@ -135,11 +135,15 @@ def query_body_build(parsed_query):
     #month_dic = {"01":"(Jan OR January OR 1)","02":"(Feb OR February OR 2)","03":"(March OR Mar OR 3","04":"April OR Apr OR 4","05":"May OR 5","06":"June OR Jun OR 6"}
     for condition in must_search_dic:
         if condition == "phone":
-            must_list.append(must_search_dic[condition][:3])
-            must_list.append(must_search_dic[condition][3:6])
-            must_list.append(must_search_dic[condition][6:])
-            should_list.append(must_search_dic[condition])
-            should_list.append(must_search_dic[condition][:3]+"-"+must_search_dic[condition][3:6]+"-"+must_search_dic[condition][6:])
+            if len(must_search_dic[condition])>= 12: #phone number greater than 12 digits might be international phone number.
+                must_list.append(must_search_dic[condition][:2])
+                must_list.append(must_search_dic[condition][3:])
+            else:
+                must_list.append(must_search_dic[condition][:3])
+                must_list.append(must_search_dic[condition][3:6])
+                must_list.append(must_search_dic[condition][6:])
+                should_list.append(must_search_dic[condition])
+                should_list.append(must_search_dic[condition][:3]+"-"+must_search_dic[condition][3:6]+"-"+must_search_dic[condition][6:])
         elif condition == "posting_date":
             calendar = must_search_dic[condition].split("-")
             if len(calendar) == 3: #year,month,day are all included
@@ -175,7 +179,7 @@ def query_body_build(parsed_query):
         query_dic["match"] = {}
         query_dic["match"]["raw_content"] = word
         should_arr.append(query_dic)
-    size = 200
+    size = 3000
     body = {"size":size,"query":{"bool":{"must":{"match":{"raw_content": must_str}}, "must_not":[{"match": {"extracted_text": must_not_str}},{"match": {"raw_content": must_not_str}}], "should": should_arr}}}
     return body
 
@@ -193,12 +197,12 @@ def elastic_search(query_body):
     return documents
 
 def annotation(text):
-    f = open("tmp3.txt","w")
+    f = open("tmp.txt","w")
     f.write(text)
     f.close()
-    inputPath = "tmp3.txt"
+    inputPath = "tmp.txt"
     shell_cmd = "java -mx5g -cp \"stanford-ner-2015-12-09/*:stanford-ner-2015-12-09/lib/*\" edu.stanford.nlp.ie.crf.CRFClassifier -loadClassifier stanford-ner-2015-12-09/classifiers/english.all.3class.distsim.crf.ser.gz -outputFormat inlineXML -textFile %s" % inputPath
     annotated_text = os.popen(shell_cmd).read()
-    os.system("rm \"tmp3.txt\"")
+    os.system("rm \"tmp.txt\"")
     return annotated_text
 
