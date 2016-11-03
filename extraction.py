@@ -72,18 +72,27 @@ def write_feature_score(feature_dic,query_id,document_id):
 #extraction
 #features: phone,email,street address, social media ID, review site ID, name, location, age, nationality/Ethnicity, price, tattoos, multiple provides, hair color, services, height, weight, eyecolor
 
-def phone_recognition(document,is_raw_content):
+def phone_recognition(document,is_raw_content): #retrieve distinct phone number
+    """
+    :param document:
+    :param is_raw_content:
+    :return: List[str] containing all the distinct phone number in raw_content or extracted_text
+    """
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)"
-    text_result = re.findall(number_pattern,text)
     result = []
+    number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)" #Mainly retrieve national phone numbers
+    text_result = re.findall(number_pattern,text)
     for item in text_result:
         result.append("".join(item))
-    return result
+    inter_phone_pattern = r"(?:^|\D)\+?(\d{2})[ -_]?(\d{9,10})(?:$|\D)" #Retrieve international phone numebrs with regional number at the beginning.
+    inter_phone_pattern_result = re.findall(inter_phone_pattern,text)
+    for item in inter_phone_pattern_result:
+        result.append("".join(item))
+    return list(set(result))
     # result = []
     # for country in country_abbr_list:
     #     for match in phonenumbers.PhoneNumberMatcher(text,country):
@@ -110,7 +119,7 @@ def email_recognition(document,is_raw_content):
             result.append(email[0].lower())
     return result
 
-def physical_address_recognition(document,is_raw_content):
+def address_recognition(document,is_raw_content):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -281,7 +290,7 @@ def age_recognition(document,is_raw_content):
                     result.append(int(age)+5)
                     break
                 if "late" in words[i-1].lower():
-                    result.append([str(int(age)+7),str(int(age)+8),str(int(age)+9)])
+                    #result.append([str(int(age)+7),str(int(age)+8),str(int(age)+9)])
                     result.append(int(age)+8)
                     break
             for word in post_match_field:
@@ -360,6 +369,7 @@ def ethnicity_recognition(document,is_raw_content):
     f = open(nationality_filepath)
     nationality_list = ','.join(f.readlines()).split(",")
     f.close()
+    text = re.sub("\W"," ",text)
     words = text.split()
     for word in words:
             word_norm = word.lower().capitalize()
@@ -399,7 +409,7 @@ def price_recognition(document,is_raw_content):
     for i in range(len(split)):
         if split[i] in post_price_indicator:
             for pricePat in preDollarPrice:
-                print((split[i], split[i - 1]))
+                #print((split[i], split[i - 1]))
                 price = re.findall(pricePat, split[i - 1])
                 if price:
                     priceList.append('$' + re.sub('\D', '', split[i - 1]))  
@@ -408,7 +418,7 @@ def price_recognition(document,is_raw_content):
             for pricePat in preDollarPrice:
                 price = re.findall(pricePat, split[i + 1])
                 if price:
-                    print((split[i], split[i + 1]))
+                    #print((split[i], split[i + 1]))
                     for cur in currency:
                         if cur in split[i + 1]:
                             priceList.append(cur + re.sub('\D', '', split[i + 1]))
@@ -419,7 +429,7 @@ def price_recognition(document,is_raw_content):
                 price = re.findall(pricePat, split[i])
                 if price:
                     priceList.append(price[0][0])
-                    print(price[0][0])
+                    #print(price[0][0])
                 #print(priceList[i])
     return(priceList)
 
@@ -791,7 +801,7 @@ def business_recognition(document,is_raw_content):
     text = get_text(document)
     business = []
     business_name = business_name_recognition(document,is_raw_content)
-    business_address = physical_address_recognition(document,is_raw_content)
+    business_address = address_recognition(document,is_raw_content)
     if business_name:
         for name in business_name:
             name = result_normalize(name)
@@ -929,14 +939,14 @@ def color_recognition(document,is_raw_content):
 
 if __name__ != "__main__":
     global functionDic
-    functionDic = {"physical_address": physical_address_recognition,"age":age_recognition,
+    functionDic = {"address": address_recognition,"age":age_recognition,
                    "name":name_recognition, "hair_color":hair_color_recognition,"eye_color":eye_color_recognition,"nationality":nationality_recognition,
                    "ethnicity":ethnicity_recognition,"review_site":review_site_recognition,"email": email_recognition,"phone": phone_recognition,
                    "location":location_recognition,"price":price_recognition,"number_of_individuals": number_of_individuals_recognition,
                     "social_media_id":social_media_id_recognition,"services":services_recognition,"height":height_recognition,"weight":weight_recognition
                    }
     global feature_list
-    feature_list = ["physical_address","age","name","hair_color","eye_color","nationality","ethnicity","review_site","email","phone","location","posting_date","price","number_of_individuals","gender","review_id","title","business","business_type","business_name","services","hyperlink","multiple_phone","top_level_domain"]
+    feature_list = ["address","age","name","hair_color","eye_color","nationality","ethnicity","review_site","email","phone","location","posting_date","price","number_of_individuals","gender","review_id","title","business","business_type","business_name","services","hyperlink","multiple_phone","top_level_domain"]
 
     normalized_color = ["blonde", "brown", "black", "red", "auburn", "chestnut", "gray", "white","dark", "blue", "brown", "green", "hazel", "amber"]
     global color_list

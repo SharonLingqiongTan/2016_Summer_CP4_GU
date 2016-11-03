@@ -196,6 +196,40 @@
             "query": "6 - What are the prices associated with the phone number 02 4961 3444?", 
             "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?price WHERE { ?ad a qpr:Ad ; qpr:phone '0249613444' ; qpr:posting_date '2016-05-07' ; qpr:price ?price . }"
         },
+        "1222.7": {
+            "parsed": {
+                "select": {
+                    "variables": [
+                        {
+                            "type": "simple", 
+                            "variable": "?ad"
+                        },
+                        {
+                            "type":"simple",
+                            "variable": "?eye_color"
+                        }
+                    ]
+                },
+                "where": {
+                    "clauses": [
+                        {
+                            "constraint": "Abigail.in.SF@gmail.com", 
+                            "isOptional": false, 
+                            "predicate": "email"
+                        }, 
+                        {
+                            "isOptional": false, 
+                            "predicate": "eye_color", 
+                            "variable": "?eye_color"
+                        }
+                    ], 
+                    "type": "Ad", 
+                    "variable": "?ad"
+                }
+            }, 
+            "query": "7 - What is the eye color of the escort(s) advertised on GFEMonkey with the email address Abigail.in.SF@gmail.com", 
+            "sparql": "PREFIX qpr: <http://istresearch.com/qpr> SELECT ?ad ?price WHERE { ?ad a qpr:Ad ; qpr:phone '0249613444' ; qpr:posting_date '2016-05-07' ; qpr:price ?price . }"
+        },
         "1222.8": {
             "parsed": {
                 "select": {
@@ -224,8 +258,8 @@
                         }, 
                         {
                             "isOptional": false, 
-                            "predicate": "eye_color", 
-                            "variable": "?eye_color"
+                            "predicate": "phone", 
+                            "variable": "?phone"
                         }
                     ], 
                     "type": "Ad", 
@@ -987,7 +1021,7 @@
         "1223.11": {
             "parsed": {
                 "group-by": {
-                    "group-variable": "?service", 
+                    "group-variable": "?services", 
                     "limit": 1, 
                     "order-variable": "?count", 
                     "sorted-order": "desc"
@@ -1008,7 +1042,7 @@
                         }, 
                         {
                             "type": "simple", 
-                            "variable": "?service"
+                            "variable": "?services"
                         }
                     ]
                 }, 
@@ -1021,8 +1055,8 @@
                         }, 
                         {
                             "isOptional": false, 
-                            "predicate": "service", 
-                            "variable": "?service"
+                            "predicate": "services", 
+                            "variable": "?services"
                         }
                     ], 
                     "type": "Ad", 
@@ -1035,7 +1069,7 @@
         "1223.12": {
             "parsed": {
                 "group-by": {
-                    "group-variable": "?number_of_providers", 
+                    "group-variable": "?number_of_", 
                     "limit": 1, 
                     "order-variable": "?count"
                 }, 
@@ -1055,7 +1089,7 @@
                         }, 
                         {
                             "type": "simple", 
-                            "variable": "?number_of_providers"
+                            "variable": "?number_of_individuals"
                         }
                     ]
                 }, 
@@ -1068,8 +1102,8 @@
                         }, 
                         {
                             "isOptional": false, 
-                            "predicate": "number_of_providers", 
-                            "variable": "?number_of_providers"
+                            "predicate": "number_of_individuals", 
+                            "variable": "?number_of_individuals"
                         }
                     ], 
                     "type": "Ad", 
@@ -1244,7 +1278,7 @@
                         {
                             "constraint": "5105124396", 
                             "isOptional": false, 
-                            "predicate": "seed:"
+                            "predicate": "seed"
                         }, 
                         {
                             "isOptional": false, 
@@ -1278,7 +1312,7 @@
                         {
                             "constraint": "380685070797", 
                             "isOptional": false, 
-                            "predicate": "seed:"
+                            "predicate": "seed"
                         }, 
                         {
                             "isOptional": false, 
@@ -1312,7 +1346,7 @@
                         {
                             "constraint": "6464809094", 
                             "isOptional": false, 
-                            "predicate": "seed:"
+                            "predicate": "seed"
                         }, 
                         {
                             "isOptional": false, 
