@@ -252,9 +252,9 @@
                             "predicate": "weight"
                         }, 
                         {
-                            "constraint": "Abigail.in.SF@gmail.com", 
+                            "constraint": "Bangkok", 
                             "isOptional": false, 
-                            "predicate": "email"
+                            "predicate": "location"
                         }, 
                         {
                             "isOptional": false, 

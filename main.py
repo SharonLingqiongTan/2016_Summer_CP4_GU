@@ -13,9 +13,9 @@ def main():
     for query in query_list:
         start = datetime.now()
         answer_dic = []
-        if query["type"] == "aggregate" and query["id"] == "1223.7":
+        if query["type"] == "pointfact" and query["id"] == "1222.9":
             #print(query)
-            filepath = "aggregate/"+query["id"]
+            filepath = "pointfact/"+query["id"]
             parsed_query_dic = search.query_parse(query)
             print(parsed_query_dic)
             result = []
@@ -27,14 +27,12 @@ def main():
                 documents = search.elastic_search(query_body)
                 annotated_raw_contents = []
                 annotated_clean_contents = []
-                if "location" in str(parsed_query_dic) or "name" in str(parsed_query_dic):
+                if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"]:
                     annotated_raw_contents,annotated_clean_contents = annotator(documents)
-                else:
-                    annotated_raw_contents,annotated_clean_contents = [],[]
                 print(len(documents))
                 print(len(annotated_clean_contents),len(annotated_raw_contents))
                 for i in range(len(documents)):
-                    if "location" in str(parsed_query_dic) or "name" in str(parsed_query_dic):
+                    if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"]:
                         documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
                         documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
                     # output_filepath = "/Users/infosense/Desktop/test"print
@@ -51,7 +49,7 @@ def main():
                         #print(answer)
                         #if len(answer)>0:
                         if answer:
-                            print(answer)
+                            #print(answer)
                             dic = {}
                             dic["id"] = documents[i]["_id"]
                             # dic["validation_score"] = documents[i]["validation_score"]
@@ -427,6 +425,8 @@ def validate(document, parsed_query): # Need to write
                     else:
                         if location_field.lower() in lower_raw_content or location_field.lower() in lower_extract_text:
                             isValid = True
+                if not isValid:
+                    return False
             else:
                 if matchword[feature].lower() in lower_raw_content or matchword[feature].lower() in lower_extract_text:
                     isValid = True
@@ -439,6 +439,8 @@ def validate(document, parsed_query): # Need to write
         if isValid:
             continue
         # if score == 0:
+        if feature == "name": #If given name is not in the string match result, it means it can hardly be found by annotation extraction.
+            return False
         results = extraction.functionDic[feature](document,True)
         # if results:
         #     #isValid = False

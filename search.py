@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import certifi,os,yaml,sys,re
 from elasticsearch import Elasticsearch
+import extraction
 
 def query_retrival(query_path): #parse the json query file into a list of queries
     f = open(query_path)
@@ -24,12 +25,12 @@ def query_parse(query):
     filters = {}
     if "filters" in where:
         filters = where["filters"]
-    parsed_dic = {}
-    must_search_field = {}
-    should_search_field = {}
-    must_not_field = {}
-    required_match_field = {}
-    optional_match_field = {}
+    parsed_dic = {} #Dictory to store the parsed query
+    must_search_field = {} #Correspond to the must field in ElasticSearch Query
+    should_search_field = {} #Correspond to the should field in ElasticSearch Query
+    must_not_field = {} #Correspond to the must not field in ElasticSearch Query
+    required_match_field = {} #Validation fields after document retrieval
+    optional_match_field = {} #Optional fields after document retrieval
     answer_field = {}
     for clause in clauses:
         predicate = re.sub("[^\w]","",clause["predicate"])
@@ -41,24 +42,20 @@ def query_parse(query):
                     should_search_field["ethnicity"] = clause["constraint"]
                 else:
                     must_search_field["ethnicity"] = clause["constraint"]
-            elif predicate == "drug_use":
-                should_search_field["drug_use"] = "drug"
-            elif predicate == "location":
+            # elif predicate == "drug_use":
+            #     should_search_field["drug_use"] = "drug"
+            elif predicate == "location": #location = city,state(which is not necesary
                 location = clause["constraint"].split(",")
                 if location:
                     should_search_field["location"] = clause["constraint"]
                     if len(location)>1:
-                        nationality_filepath = "./resource/nationality"
-                        with open(nationality_filepath) as f:
-                            nationality_list = ','.join(f.readlines()).split(",")
-                            f.close()
-                            if location[1].lower().capitalize() in nationality_list:
-                                country = location[1]
-                                if location[1].lower() == "thailand":
-                                    country = "thai"
-                                must_search_field["location"] = location[0]+" AND "+country
-                            else:
-                                must_search_field["location"] = location[0]
+                        if location[1].lower().capitalize() in extraction.nationality_list:
+                            country = location[1]
+                            if location[1].lower() == "thailand":
+                                country = "thai"
+                            must_search_field["location"] = location[0]+" AND "+country
+                        else:
+                            must_search_field["location"] = location[0]
                     else:
                         must_search_field["location"] = location[0]
             elif predicate == "seed":
@@ -86,7 +83,7 @@ def query_parse(query):
                         must_search_field[predicate] = "hair"
                     if predicate == "eye_color":
                         must_search_field[predicate] = "hair"
-                    if predicate == "ethnicity":
+                    if predicate == "ethnicity": #Add "ethinitity" to should search field to get relavant documents ahead in the result.
                         should_search_field[predicate] = "ethnicity"
                     if predicate == "review_site":
                         should_search_field[predicate] = "review"
@@ -134,16 +131,16 @@ def query_body_build(parsed_query):
     must_not_dic = parsed_query["must_not_field"]
     #month_dic = {"01":"(Jan OR January OR 1)","02":"(Feb OR February OR 2)","03":"(March OR Mar OR 3","04":"April OR Apr OR 4","05":"May OR 5","06":"June OR Jun OR 6"}
     for condition in must_search_dic:
-        if condition == "phone":
-            if len(must_search_dic[condition])>= 12: #phone number greater than 12 digits might be international phone number.
+        if condition == "phone": #phone number usually can not be searched directly
+            if len(must_search_dic[condition])>= 12: #phone number greater than 12 digits are regarded as international phone number.
                 must_list.append(must_search_dic[condition][:2])
                 must_list.append(must_search_dic[condition][3:])
             else:
                 must_list.append(must_search_dic[condition][:3])
                 must_list.append(must_search_dic[condition][3:6])
                 must_list.append(must_search_dic[condition][6:])
-                should_list.append(must_search_dic[condition])
                 should_list.append(must_search_dic[condition][:3]+"-"+must_search_dic[condition][3:6]+"-"+must_search_dic[condition][6:])
+            should_list.append(must_search_dic[condition])
         elif condition == "posting_date":
             calendar = must_search_dic[condition].split("-")
             if len(calendar) == 3: #year,month,day are all included

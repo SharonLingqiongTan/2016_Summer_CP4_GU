@@ -74,8 +74,8 @@ def write_feature_score(feature_dic,query_id,document_id):
 
 def phone_recognition(document,is_raw_content): #retrieve distinct phone number
     """
-    :param document:
-    :param is_raw_content:
+    :param document:Dictionary
+    :param is_raw_content: Boolean
     :return: List[str] containing all the distinct phone number in raw_content or extracted_text
     """
     text = ""
@@ -523,24 +523,27 @@ def eye_color_recognition(document,is_raw_content):
     return text_result
 
 def services_recognition(document,is_raw_content):
+    """
+    :param document: Dictionary
+    :param is_raw_content: Boolean
+    :return: List[str] containing all distinct service that is in the document as well as in the local service list
+    """
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
     else:
         text = get_text(document)
-    service_list_path = "resource/serviceList.txt"
-    sex_service = []
-    with open(service_list_path, "r") as inputFile:
-        services = inputFile.readlines()
-        for i in range(len(services)):
-            services[i] = services[i].strip("\n")
-    for service in services:
-        pattern = "(?i)(" + service + ")"
-        results = re.findall(pattern, text)
-        if results:
-            for res in results:
-                sex_service.append(result_normalize(res))
-    return sex_service
+    result = []
+    for service in service_list:
+        if service == "69":
+            pattern = r"\W69\W"
+            if re.search(pattern,text):
+                result.append("69")
+        else:
+            service_item = service.lower()
+            if service_item in text.lower():
+                result.append(service_item)
+    return result
 
 def tattoo_recognition(document,is_raw_content):
     return ""
