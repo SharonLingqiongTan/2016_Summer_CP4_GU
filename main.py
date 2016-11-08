@@ -3,6 +3,7 @@ import sys,json,datetime,os,re
 from datetime import datetime
 import yaml
 from fuzzywuzzy import fuzz
+from pymongo import MongoClient
 import search,extraction,ebola_html_dealer
 
 def main():
@@ -10,10 +11,12 @@ def main():
     sys.setdefaultencoding("utf-8")
     query_path = "spql_self_built_query.json"
     query_list = search.query_retrival(query_path)
+    client = MongoClient()
+    db = client.database
     for query in query_list:
         start = datetime.now()
         answer_dic = []
-        if query["type"] == "aggregate" and query["id"] == "1223.7":
+        if query["type"] == "aggregate" and query["id"] == "1223.12":
             #print(query)
             filepath = "aggregate/"+query["id"]
             parsed_query_dic = search.query_parse(query)
@@ -27,14 +30,29 @@ def main():
                 documents = search.elastic_search(query_body)
                 annotated_raw_contents = []
                 annotated_clean_contents = []
+                is_fir_annotation = True #Indicator if it is the first time annotation for this query
+                collection = db[query["id"]]
                 if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "number_of_individuals" in parsed_query_dic["answer_field"]:
-                    annotated_raw_contents,annotated_clean_contents = annotator(documents)
+                    if query["id"] not in db.collection_names():
+                        annotated_raw_contents,annotated_clean_contents = annotator(documents)
+                    else:
+                        is_fir_annotation = False
                 print(len(documents))
                 print(len(annotated_clean_contents),len(annotated_raw_contents))
                 for i in range(len(documents)):
                     if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "number_of_individuals" in parsed_query_dic["answer_field"]:
-                        documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
-                        documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
+                        if is_fir_annotation:
+                            annotation = {"_id":documents[i]["_id"],"annotated_raw_content":annotated_raw_contents[i],"annotated_clean_content":annotated_clean_contents[i]}
+                            collection.insert_one(annotation)
+                            documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
+                            documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
+                        else:
+                            try:
+                                annotation = collection.find_one({"_id":documents[i]["_id"]})
+                                documents[i]["annotated_raw_content"] = annotation["annotated_raw_content"]
+                                documents[i]["annotated_clean_content"] = annotation["annotated_clean_content"]
+                            except:
+                                print(documents[i]["_id"])
                     # output_filepath = "/Users/infosense/Desktop/test"print
                     # w = open(document_path,"w")
                     # extractions = {}
