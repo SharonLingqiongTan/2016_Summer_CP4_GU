@@ -13,9 +13,9 @@ def main():
     for query in query_list:
         start = datetime.now()
         answer_dic = []
-        if query["type"] == "pointfact" and query["id"] == "1222.9":
+        if query["type"] == "aggregate" and query["id"] == "1223.7":
             #print(query)
-            filepath = "pointfact/"+query["id"]
+            filepath = "aggregate/"+query["id"]
             parsed_query_dic = search.query_parse(query)
             print(parsed_query_dic)
             result = []
@@ -27,12 +27,12 @@ def main():
                 documents = search.elastic_search(query_body)
                 annotated_raw_contents = []
                 annotated_clean_contents = []
-                if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"]:
+                if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "number_of_individuals" in parsed_query_dic["answer_field"]:
                     annotated_raw_contents,annotated_clean_contents = annotator(documents)
                 print(len(documents))
                 print(len(annotated_clean_contents),len(annotated_raw_contents))
                 for i in range(len(documents)):
-                    if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"]:
+                    if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "number_of_individuals" in parsed_query_dic["answer_field"]:
                         documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
                         documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
                     # output_filepath = "/Users/infosense/Desktop/test"print
@@ -96,6 +96,7 @@ def annotator(documents):
         clean_indexed = search.annotation(separator.join(clean_contents))
         indexed_raw_result += raw_indexed.split(separator)
         indexed_clean_result += clean_indexed.split(separator)
+        print(i)
     return (indexed_raw_result,indexed_clean_result)
     #print(datetime.datetime.now())
 
@@ -196,21 +197,27 @@ def cluster(query, search_round):
         i += 1
     return res
 
-def build_dictionary(search_result, current_query, searched_ads):
+def build_dictionary(documents, parsed_query_dic, searched_ads):
+    annotated_raw_contents = []
+    annotated_clean_contents = []
+    if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "number_of_individuals" in parsed_query_dic["answer_field"]:
+        annotated_raw_contents,annotated_clean_contents = annotator(documents)
     functionDic = extraction.functionDic
     dicts = []
-    for result in search_result:
+    for i in range(len(documents)):
         dic = {}
-        adID = result["_id"]
+        adID = documents[i]["_id"]
+        if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "number_of_individuals" in parsed_query_dic["answer_field"]:
+            documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
+            documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
         if adID not in searched_ads:
             searched_ads.append(adID)
-            extracted_text = extraction.get_text(result)
-            #print(current_query)
-            if validate(result, current_query):
+            extracted_text = extraction.get_text(documents[i])
+            if validate(documents[i], documents):
                 # print("Pass validation")
-                email = list(set(extraction.email_recognition(result,True)))
-                phone = list(set(extraction.phone_recognition(result,True)))
-                address = list(set(extraction.address_recognition(result,True)))
+                email = list(set(extraction.email_recognition(documents[i],True)))
+                phone = list(set(extraction.phone_recognition(documents[i],True)))
+                address = list(set(extraction.address_recognition(documents[i],True)))
                 dic[adID] = {}
                 dic[adID]["email"] = email
                 dic[adID]["phone"] = phone

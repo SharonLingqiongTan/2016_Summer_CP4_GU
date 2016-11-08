@@ -1069,7 +1069,7 @@
         "1223.12": {
             "parsed": {
                 "group-by": {
-                    "group-variable": "?number_of_", 
+                    "group-variable": "?number_of_individuals",
                     "limit": 1, 
                     "order-variable": "?count"
                 }, 

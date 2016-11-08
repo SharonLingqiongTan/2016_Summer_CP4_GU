@@ -194,12 +194,12 @@ def elastic_search(query_body):
     return documents
 
 def annotation(text):
-    f = open("tmp.txt","w")
+    f = open("tmp7.txt","w")
     f.write(text)
     f.close()
-    inputPath = "tmp.txt"
+    inputPath = "tmp7.txt"
     shell_cmd = "java -mx5g -cp \"stanford-ner-2015-12-09/*:stanford-ner-2015-12-09/lib/*\" edu.stanford.nlp.ie.crf.CRFClassifier -loadClassifier stanford-ner-2015-12-09/classifiers/english.all.3class.distsim.crf.ser.gz -outputFormat inlineXML -textFile %s" % inputPath
     annotated_text = os.popen(shell_cmd).read()
-    os.system("rm \"tmp.txt\"")
+    os.system("rm \"tmp7.txt\"")
     return annotated_text
 
