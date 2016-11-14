@@ -1,89 +1,101 @@
 __author__ = 'infosense'
 import sys,json,datetime,os,re
 from datetime import datetime
+from multiprocessing import Pool
 import yaml
 from fuzzywuzzy import fuzz
 from pymongo import MongoClient
 import search,extraction,ebola_html_dealer
 
 def main():
+    start = datetime.now()
     reload(sys)
     sys.setdefaultencoding("utf-8")
     query_path = "spql_self_built_query.json"
     query_list = search.query_retrival(query_path)
-    client = MongoClient()
-    db = client.database
-    for query in query_list:
-        start = datetime.now()
-        answer_dic = []
-        if query["type"] == "aggregate" and query["id"] == "1223.12":
-            #print(query)
-            filepath = "aggregate/"+query["id"]
-            parsed_query_dic = search.query_parse(query)
-            print(parsed_query_dic)
-            result = []
-            if query["type"] == "cluster":
-                result = cluster(query,5)
-            else:
-                query_body = search.query_body_build(parsed_query_dic)
-                #print(query_body)
-                documents = search.elastic_search(query_body)
-                annotated_raw_contents = []
-                annotated_clean_contents = []
-                is_fir_annotation = True #Indicator if it is the first time annotation for this query
-                collection = db[query["id"]]
-                if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "number_of_individuals" in parsed_query_dic["answer_field"]:
-                    if query["id"] not in db.collection_names():
-                        annotated_raw_contents,annotated_clean_contents = annotator(documents)
-                    else:
-                        is_fir_annotation = False
-                print(len(documents))
-                print(len(annotated_clean_contents),len(annotated_raw_contents))
-                for i in range(len(documents)):
-                    if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "number_of_individuals" in parsed_query_dic["answer_field"]:
-                        if is_fir_annotation:
-                            annotation = {"_id":documents[i]["_id"],"annotated_raw_content":annotated_raw_contents[i],"annotated_clean_content":annotated_clean_contents[i]}
-                            collection.insert_one(annotation)
-                            documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
-                            documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
-                        else:
-                            try:
-                                annotation = collection.find_one({"_id":documents[i]["_id"]})
-                                documents[i]["annotated_raw_content"] = annotation["annotated_raw_content"]
-                                documents[i]["annotated_clean_content"] = annotation["annotated_clean_content"]
-                            except:
-                                print(documents[i]["_id"])
-                    # output_filepath = "/Users/infosense/Desktop/test"print
-                    # w = open(document_path,"w")
-                    # extractions = {}
-                    # for func_name,func in extraction.functionDic.items():
-                    #     extractions["raw_"+func_name] = func(documents[i],True)
-                    #     extractions[func_name] = func(documents[i],False)
-                    # documents[i]["indexing"] = extractions
-                    # json.dump(documents[i],w)
-                    # w.close()
-                    if validate(documents[i],parsed_query_dic):
-                        answer = answer_extraction(documents[i],parsed_query_dic)
-                        #print(answer)
-                        #if len(answer)>0:
-                        if answer:
-                            #print(answer)
-                            dic = {}
-                            dic["id"] = documents[i]["_id"]
-                            # dic["validation_score"] = documents[i]["validation_score"]
-                            # dic["els_score"] = documents[i]["_score"]
-                            # dic["extraction_score"] = answer["extraction_score"]
-                            # dic["feature"] = extraction.generate_feature_score(document)
-                            dic.update(answer)
-                            result.append(dic)
-            #print(result)
-            final_result = generate_formal_answer(query,result)
-            final_result["timelog"] = (datetime.now()-start).seconds
-            #answer_dic.append(final_result)
-            #print(answer_dic)
-            f = open(filepath,"w")
-            json.dump(final_result,f)
-            f.close()
+    aggregate = filter(lambda x:x["type"] == "aggregate",query_list)
+    #print(type(cluster))
+    #aggregate = filter(lambda x:x["id"] == "1223.12",aggregate)
+    #global db
+    pool = Pool()
+    pool.map(pipeline,aggregate)
+    # for query in aggregate:
+    #     pipeline(query)
+    print((datetime.now()-start).seconds)
+
+def pipeline(query):
+    #client = MongoClient()
+    #db = client.database
+    start = datetime.now()
+    answer_dic = []
+    #if query["type"] == "aggregate" and query["id"] == "1223.12":
+        #print(query)
+    filepath = "aggregate_test/"+query["id"]
+    parsed_query_dic = search.query_parse(query)
+    #print(parsed_query_dic)
+    result = []
+    if query["type"] == "cluster":
+        result = cluster(query,5)
+    else:
+        query_body = search.query_body_build(parsed_query_dic)
+        #print(query_body)
+        documents = search.elastic_search(query_body)
+        annotated_raw_contents = []
+        annotated_clean_contents = []
+        #is_fir_annotation = True #Indicator if it is the first time annotation for this query
+        #collection = db[query["id"]]
+        if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "number_of_individuals" in parsed_query_dic["answer_field"]:
+            #if query["id"] not in db.collection_names():
+            annotated_raw_contents,annotated_clean_contents = annotator(documents)
+            # else:
+            #     is_fir_annotation = False
+        print(len(documents))
+        print(len(annotated_clean_contents),len(annotated_raw_contents))
+        for i in range(len(documents)):
+            if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "number_of_individuals" in parsed_query_dic["answer_field"]:
+                #if is_fir_annotation:
+                    #annotation = {"_id":documents[i]["_id"],"annotated_raw_content":annotated_raw_contents[i],"annotated_clean_content":annotated_clean_contents[i]}
+                    #collection.insert_one(annotation)
+                documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
+                documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
+                # else:
+                #     try:
+                #         annotation = collection.find_one({"_id":documents[i]["_id"]})
+                #         documents[i]["annotated_raw_content"] = annotation["annotated_raw_content"]
+                #         documents[i]["annotated_clean_content"] = annotation["annotated_clean_content"]
+                #     except:
+                #         print(documents[i]["_id"])
+            # output_filepath = "/Users/infosense/Desktop/test"print
+            # w = open(document_path,"w")
+            # extractions = {}
+            # for func_name,func in extraction.functionDic.items():
+            #     extractions["raw_"+func_name] = func(documents[i],True)
+            #     extractions[func_name] = func(documents[i],False)
+            # documents[i]["indexing"] = extractions
+            # json.dump(documents[i],w)
+            # w.close()
+            if validate(documents[i],parsed_query_dic):
+                answer = answer_extraction(documents[i],parsed_query_dic)
+                #print(answer)
+                #if len(answer)>0:
+                if answer:
+                    #print(answer)
+                    dic = {}
+                    dic["id"] = documents[i]["_id"]
+                    # dic["validation_score"] = documents[i]["validation_score"]
+                    # dic["els_score"] = documents[i]["_score"]
+                    # dic["extraction_score"] = answer["extraction_score"]
+                    # dic["feature"] = extraction.generate_feature_score(document)
+                    dic.update(answer)
+                    result.append(dic)
+    #print(result)
+    final_result = generate_formal_answer(query,result)
+    final_result["timelog"] = (datetime.now()-start).seconds
+    #answer_dic.append(final_result)
+    #print(answer_dic)
+    f = open(filepath,"w")
+    json.dump(final_result,f)
+    f.close()
 
 def annotator(documents):
     """
@@ -231,7 +243,7 @@ def build_dictionary(documents, parsed_query_dic, searched_ads):
         if adID not in searched_ads:
             searched_ads.append(adID)
             extracted_text = extraction.get_text(documents[i])
-            if validate(documents[i], documents):
+            if validate(documents[i], parsed_query_dic):
                 # print("Pass validation")
                 email = list(set(extraction.email_recognition(documents[i],True)))
                 phone = list(set(extraction.phone_recognition(documents[i],True)))
