@@ -72,11 +72,10 @@ def write_feature_score(feature_dic,query_id,document_id):
 #extraction
 #features: phone,email,street address, social media ID, review site ID, name, location, age, nationality/Ethnicity, price, tattoos, multiple provides, hair color, services, height, weight, eyecolor
 
-def phone_recognition(document,is_raw_content,is_position): #retrieve distinct phone number
+def phone_recognition(document,is_raw_content): #retrieve distinct phone number
     """
     :param document:Dictionary
     :param is_raw_content: Boolean
-    :param position:
     :return: List[str] containing all the distinct phone number in raw_content or extracted_text
     """
     text = ""
@@ -86,20 +85,13 @@ def phone_recognition(document,is_raw_content,is_position): #retrieve distinct p
         text = get_text(document)
     result = []
     number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)" #Mainly retrieve national phone numbers
-    if is_position:
-        for item in re.finditer(number_pattern,text):
-            result.append((item.start(),"".join(item.groups())))
-    else:
-        for item in re.findall(number_pattern,text):
-            result.append("".join(item))
-
+    text_result = re.findall(number_pattern,text)
+    for item in text_result:
+        result.append("".join(item))
     inter_phone_pattern = r"(?:^|\D)\+?(\d{2})[ -_]?(\d{9,10})(?:$|\D)" #Retrieve international phone numebrs with regional number at the beginning.
-    if is_position:
-        for item in re.finditer(inter_phone_pattern,text):
-            result.append((item.start(),re.sub(r"\D","",item.group())))
-    else:
-        for item in re.findall(inter_phone_pattern,text):
-            result.append("".join(item))
+    inter_phone_pattern_result = re.findall(inter_phone_pattern,text)
+    for item in inter_phone_pattern_result:
+        result.append("".join(item))
     return list(set(result))
     # result = []
     # for country in country_abbr_list:
@@ -111,7 +103,7 @@ def phone_recognition(document,is_raw_content,is_position): #retrieve distinct p
     #return list(set(result))
 
 
-def email_recognition(document,is_raw_content,is_position):
+def email_recognition(document,is_raw_content):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -121,18 +113,13 @@ def email_recognition(document,is_raw_content,is_position):
                     "{|}~-]+)*(@|\sat\s)(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(\.|"
                     "\sdot\s))+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)"))
     result = []
-    if is_position:
-        for item in re.finditer(regex,text):
-            if not item.group().startswith("//"):
-                result.append((item.start(),item.group(0)))
-    else:
-        text_result = re.findall(regex,text)
-        for email in text_result:
-            if not email[0].startswith('//'):
-                result.append(email[0].lower())
+    text_result = re.findall(regex,text)
+    for email in text_result:
+        if not email[0].startswith('//'):
+            result.append(email[0].lower())
     return result
 
-def address_recognition(document,is_raw_content,is_position):
+def address_recognition(document,is_raw_content):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -940,30 +927,6 @@ def color_recognition(document,is_raw_content):
             result[i] = words[i]
     return result
 
-################################################
-#Feature Functions Determining The correct Value
-###############################################
-def phone_position(document):
-
-
-def eye_position(document):
-
-
-def hair_position(document):
-
-
-def email_position(document):
-
-
-def weight_position(document):
-
-
-def height_position(document):
-
-
-def services_position(document):
-
-##############################################
 
 if __name__ != "__main__":
     global functionDic
