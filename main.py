@@ -13,14 +13,14 @@ def main():
     sys.setdefaultencoding("utf-8")
     query_path = "spql_self_built_query.json"
     query_list = search.query_retrival(query_path)
-    aggregate = filter(lambda x:x["type"] == "aggregate",query_list)
+    aggregate = filter(lambda x:x["type"] == "pointfact",query_list)
     #print(type(cluster))
-    #aggregate = filter(lambda x:x["id"] == "1223.12",aggregate)
+    aggregate = filter(lambda x:x["id"] == "1222.14",aggregate)
     #global db
-    pool = Pool()
-    pool.map(pipeline,aggregate)
-    # for query in aggregate:
-    #     pipeline(query)
+    #pool = Pool()
+    #pool.map(pipeline,aggregate)
+    for query in aggregate:
+        pipeline(query)
     print((datetime.now()-start).seconds)
 
 def pipeline(query):
@@ -30,7 +30,7 @@ def pipeline(query):
     answer_dic = []
     #if query["type"] == "aggregate" and query["id"] == "1223.12":
         #print(query)
-    filepath = "aggregate_test/"+query["id"]
+    filepath = "pointfact_test/"+query["id"]
     parsed_query_dic = search.query_parse(query)
     #print(parsed_query_dic)
     result = []
@@ -363,6 +363,26 @@ def generate_formal_answer(query,result):
             final_result["answers"].append(answer_dic)
     return final_result
 
+
+def clarify(document,feature): #Determine which one is the right answer by word distance
+    clarify_list = ["phone","hair_color","eye_color","height","weight","services"]
+    clarify_result = []
+    candidates = extraction.functionDic[feature](document,True,True)
+    for func in clarify_list:
+        if feature != func:
+            clarify_result.append(extraction.functionDic[func](document,True,True))
+    scores = []
+    for candidate in candidates:
+        score = 0
+        for item in clarify_result:
+            for result in item:
+                score += abs(candidate[0]-result[0])/len(item)
+        scores.append(score)
+    min_distance_index = scores.index(min(scores))
+    print(candidates)
+    return candidates[min_distance_index][1]
+
+
 def get_cluster_seed(query):
     clauses = query["where"]["clauses"]
     for clause in clauses:
@@ -380,8 +400,8 @@ def answer_extraction(document,parsed_query_dic):
         #     if feature in document["_source"]["extracted_metadata"]:
         #         document["meta_text_percentage"] += 1
         #look for the extraction in raw content
-        raw_result = extraction.functionDic[feature](document,True)
-        result = extraction.functionDic[feature](document,False)
+        raw_result = extraction.functionDic[feature](document,True,False)
+        result = extraction.functionDic[feature](document,False,False)
         if result and raw_result:
             intersection = list(set(raw_result) & set(result)) #return those results that are both in the raw_content and extracted_text
             if intersection:
@@ -393,6 +413,8 @@ def answer_extraction(document,parsed_query_dic):
                 extraction_result[feature] = result
             if raw_result:
                 extraction_result[feature] = raw_result
+        if len(set(extraction_result[feature]))>1:
+            extraction_result[feature] = [clarify(document,feature)]
         # match_frequency += len(raw_result)
         # if raw_result:
         #     document["raw_content_percentage"] += 1.0
@@ -478,7 +500,7 @@ def validate(document, parsed_query): # Need to write
         # if score == 0:
         if feature == "name": #If given name is not in the string match result, it means it can hardly be found by annotation extraction.
             return False
-        results = extraction.functionDic[feature](document,True)
+        results = extraction.functionDic[feature](document,True,False)
         # if results:
         #     #isValid = False
         #     #print(results)
@@ -509,7 +531,7 @@ def validate(document, parsed_query): # Need to write
                     isValid = True
             break
         if extract_text:
-            results = extraction.functionDic[feature](document,False)
+            results = extraction.functionDic[feature](document,False,False)
             for result in results:
                 if feature == "phone": #phone number has to be exactly the same while other features tolerate some minor difference
                     if result == re.sub("\D","",matchword[feature]):

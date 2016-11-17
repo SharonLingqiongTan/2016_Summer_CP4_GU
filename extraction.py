@@ -88,7 +88,7 @@ def phone_recognition(document,is_raw_content,is_position): #retrieve distinct p
     number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)" #Mainly retrieve national phone numbers
     if is_position:
         for item in re.finditer(number_pattern,text):
-            result.append((item.start(),"".join(item.groups())))
+            result.append((item.start()*1.0/len(text),"".join(item.groups())))
     else:
         for item in re.findall(number_pattern,text):
             result.append("".join(item))
@@ -96,7 +96,7 @@ def phone_recognition(document,is_raw_content,is_position): #retrieve distinct p
     inter_phone_pattern = r"(?:^|\D)\+?(\d{2})[ -_]?(\d{9,10})(?:$|\D)" #Retrieve international phone numebrs with regional number at the beginning.
     if is_position:
         for item in re.finditer(inter_phone_pattern,text):
-            result.append((item.start(),re.sub(r"\D","",item.group())))
+            result.append((item.start()*1.0/len(text),"".join(item.groups())))
     else:
         for item in re.findall(inter_phone_pattern,text):
             result.append("".join(item))
@@ -124,7 +124,7 @@ def email_recognition(document,is_raw_content,is_position):
     if is_position:
         for item in re.finditer(regex,text):
             if not item.group().startswith("//"):
-                result.append((item.start(),item.group(0)))
+                result.append((item.start()*1.0/len(text),item.group(0)))
     else:
         text_result = re.findall(regex,text)
         for email in text_result:
@@ -214,7 +214,7 @@ def review_site_recognition(document,is_raw_content):
                     review_site.append(site)
     return review_site
 
-def name_recognition(document,is_raw_content):
+def name_recognition(document,is_raw_content,is_position):
     annotated_text = ""
     if is_raw_content:
         annotated_text = document["annotated_raw_content"]
@@ -223,12 +223,15 @@ def name_recognition(document,is_raw_content):
     name_pattern = re.compile(r"\<PERSON\>(.*?)\</PERSON>")
     name_pattern_result = re.findall(name_pattern,annotated_text)
     result = []
-    if len(name_pattern_result)>0:
+    if is_position:
+        for item in re.finditer(name_pattern,annotated_text):
+            result.append((item.start()*1.0/len(annotated_text),"".join(item.groups())))
+    else:
         for item in name_pattern_result:
             result.append(result_normalize(item))
     return result
 
-def location_recognition(document,is_raw_content):
+def location_recognition(document,is_raw_content,is_position):
     # text = ""
     # if is_raw_content:
     #     text = get_raw_content(document)
@@ -239,8 +242,8 @@ def location_recognition(document,is_raw_content):
         annotated_text = document["annotated_raw_content"]
     else:
         annotated_text = document["annotated_clean_content"]
+    location_pattern = r"\<LOCATION\>(.*?)\</LOCATION\>"
     location_arr = re.findall(r"\<LOCATION\>(.*?)\</LOCATION\>",annotated_text)
-    #print(document)
     result = []
     # if len(location_arr) == 0:
     #     state_pattern = re.compile(r"in ([A-Z]{2})")
@@ -253,11 +256,14 @@ def location_recognition(document,is_raw_content):
     #             word_index = len(subdocument.split())
     #             result.append(word_index)
     #             start_index = start_index+str_index+len(item)
-    if len(location_arr) > 0:
         # words = annotated_text.split()
         # for i in range(len(words)):
         #     if "<LOCATION>" in words[i]:
         #         result.append(i)
+    if is_position:
+        for item in re.finditer(location_pattern,annotated_text):
+            result.append(item.start()*1.0/len(annotated_text),"".join(item.groups()))
+    else:
         for location in location_arr:
             result.append(result_normalize(location))
     #print(result)
@@ -434,7 +440,7 @@ def price_recognition(document,is_raw_content):
                 #print(priceList[i])
     return(priceList)
 
-def hair_color_recognition(document,is_raw_content):
+def hair_color_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -448,10 +454,13 @@ def hair_color_recognition(document,is_raw_content):
     text_result = []
     text_without_quotation = re.sub(r'[^\w\s]','',text)
     words = text_without_quotation.split()
+    position = -4
     for i in range(len(words)):
         if fuzz.ratio(words[i].lower(),"hair")>=75: #judge if word and hair are similar
             color_str = ""
             eye_color = False
+            if is_position:
+                position = text[position+4:].index("hair")
             for j in range(i+1,i+6): #look for color vocabulary after hair
                 if j<len(words):
                     if words[j].lower() in color_dic:
@@ -465,21 +474,33 @@ def hair_color_recognition(document,is_raw_content):
                         if words[j].lower() in color_dic:
                             hair_color_str = words[j].lower()
                     if hair_color_str:
-                        text_result.append(hair_color_str)
+                        if is_position:
+                            text_result.append((position*1.0/len(text),hair_color_str))
+                        else:
+                            text_result.append(hair_color_str)
+                    else:
+                        if is_position:
+                            text_result.append((position*1.0/len(text),color_str))
+                        else:
+                            text_result.append(color_str)
+                else:
+                    if is_position:
+                        text_result.append((position*1.0/len(text),color_str))
                     else:
                         text_result.append(color_str)
-                else:
-                    text_result.append(color_str)
             else:
                 hair_color_str = ""
                 for j in range(i-5,i):
                     if words[j].lower() in color_dic:
                         hair_color_str = words[j].lower()
                 if hair_color_str:
-                    text_result.append(hair_color_str)
+                    if is_position:
+                        text_result.append((position*1.0/len(text),hair_color_str))
+                    else:
+                        text_result.append(hair_color_str)
     return text_result
 
-def eye_color_recognition(document,is_raw_content):
+def eye_color_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -493,10 +514,13 @@ def eye_color_recognition(document,is_raw_content):
     text_result = []
     text_without_quotation = re.sub(r'[^\w\s]','',text)
     words = text_without_quotation.split()
+    position = -4
     for i in range(len(words)):
         if fuzz.ratio(words[i].lower(),"eyes")>=75: #judge if word and hair are similar
             color_str = ""
             hair_color = False
+            if is_position:
+                position = text[position+4:].index("eye")
             for j in range(i+1,i+6): #look for color vocabulary after eyes
                 if words[j].lower() in color_dic:
                     color_str = words[j].lower()
@@ -509,21 +533,33 @@ def eye_color_recognition(document,is_raw_content):
                         if words[j].lower() in color_dic:
                             eye_color_str = words[j].lower()
                     if eye_color_str:
-                        text_result.append(eye_color_str)
+                        if is_position:
+                            text_result.append((position*1.0/len(text),eye_color_str))
+                        else:
+                            text_result.append(eye_color_str)
+                    else:
+                        if is_position:
+                            text_result.append((position*1.0/len(text),color_str))
+                        else:
+                            text_result.append(color_str)
+                else:
+                    if is_position:
+                        text_result.append((position*1.0/len(text),color_str))
                     else:
                         text_result.append(color_str)
-                else:
-                    text_result.append(color_str)
             else:
                 eye_color_str = ""
                 for j in range(i-5,i):
                     if words[j].lower() in color_dic:
                         eye_color_str = words[j].lower()
                 if eye_color_str:
-                    text_result.append(eye_color_str)
+                    if is_position:
+                        text_result.append((position*1.0/len(text),eye_color_str))
+                    else:
+                        text_result.append(eye_color_str)
     return text_result
 
-def services_recognition(document,is_raw_content):
+def services_recognition(document,is_raw_content,is_position):
     """
     :param document: Dictionary
     :param is_raw_content: Boolean
@@ -535,15 +571,15 @@ def services_recognition(document,is_raw_content):
     else:
         text = get_text(document)
     result = []
+    text = text.lower()
     for service in service_list:
-        if service == "69":
-            pattern = r"\W69\W"
-            if re.search(pattern,text):
-                result.append("69")
+        pattern = r"(?i)\W"+service+"\W"
+        if is_position:
+            for item in re.finditer(pattern,text):
+                result.append((item.start()*1.0/len(text),"".join(item.groups())))
         else:
-            service_item = service.lower()
-            if service_item in text.lower():
-                result.append(service_item)
+            if service.lower() in text:
+                result.append(service.lower())
     return result
 
 def tattoo_recognition(document,is_raw_content):
@@ -552,7 +588,7 @@ def tattoo_recognition(document,is_raw_content):
 def multi_providers(document,is_raw_content):
     return number_of_individuals_recognition(document,is_raw_content)
 
-def height_recognition(document,is_raw_content):
+def height_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -562,15 +598,22 @@ def height_recognition(document,is_raw_content):
     height_pattern = r"(?:^|\W)([3-9])'[ ]?([0-9])?(?:\")?"
     height_pattern_result = re.findall(height_pattern,text)
     result = []
-    for item in height_pattern_result:
-        if item[1]: #inch is present
-            result.append(str(int(item[0])*12+int(item[1])))
-        else:
-            result.append(str(int(item[0])*12))
+    if is_position:
+        for item in re.finditer(height_pattern,text):
+            if item.groups()[1]:
+                result.append((item.start()*1.0/len(text),str(int(item.groups()[0])*12+int(item.groups()[1]))))
+            else:
+                result.append((item.start()*1.0/len(text),str(int(item.groups()[0]*12))))
+    else:
+        for item in height_pattern_result:
+            if item[1]: #inch is present
+                result.append(str(int(item[0])*12+int(item[1])))
+            else:
+                result.append(str(int(item[0])*12))
     #cm pattern
     return result
 
-def weight_recognition(document,is_raw_content):
+def weight_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -579,7 +622,13 @@ def weight_recognition(document,is_raw_content):
     weight_pattern = r"(?:^|\D)([\d]{2,3})[^A-Za-z0-9]?(?i)(kg|lb)"
     weight_pattern_result = re.findall(weight_pattern,text)
     result = []
-    if len(weight_pattern_result)>0:
+    if is_position:
+        for item in re.finditer(weight_pattern,text):
+            if item.groups()[1] == "kg":
+                result.append((item.start()*1.0/len(text),str(int(float(item.groups()[0]*2.2)))))
+            else:
+                result.append((item.start()*1.0/len(text),item.groups()[1]))
+    else:
         for item in weight_pattern_result:
             if item[1] == "kg":
                 result.append(str(int(float(item[0])*2.2)))
@@ -943,25 +992,25 @@ def color_recognition(document,is_raw_content):
 ################################################
 #Feature Functions Determining The correct Value
 ###############################################
-def phone_position(document):
-
-
-def eye_position(document):
-
-
-def hair_position(document):
-
-
-def email_position(document):
-
-
-def weight_position(document):
-
-
-def height_position(document):
-
-
-def services_position(document):
+# def phone_position(document):
+#
+#
+# def eye_position(document):
+#
+#
+# def hair_position(document):
+#
+#
+# def email_position(document):
+#
+#
+# def weight_position(document):
+#
+#
+# def height_position(document):
+#
+#
+# def services_position(document):
 
 ##############################################
 
