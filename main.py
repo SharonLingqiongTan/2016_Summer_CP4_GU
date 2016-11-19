@@ -8,20 +8,44 @@ from pymongo import MongoClient
 import search,extraction,ebola_html_dealer
 
 def main():
-    start = datetime.now()
+    #
     reload(sys)
     sys.setdefaultencoding("utf-8")
-    query_path = "spql_self_built_query.json"
-    query_list = search.query_retrival(query_path)
-    aggregate = filter(lambda x:x["type"] == "pointfact",query_list)
-    #print(type(cluster))
-    aggregate = filter(lambda x:x["id"] == "1222.14",aggregate)
-    #global db
-    #pool = Pool()
-    #pool.map(pipeline,aggregate)
-    for query in aggregate:
-        pipeline(query)
+    # query_path = "spql_self_built_query.json"
+    # query_list = search.query_retrival(query_path)
+    # aggregate = filter(lambda x:x["type"] == "pointfact",query_list)
+    # #print(type(cluster))
+    # aggregate = filter(lambda x:x["id"] == "1222.14",aggregate)
+    # #global db
+    # #pool = Pool()
+    # #pool.map(pipeline,aggregate)
+    # for query in aggregate:
+    #     pipeline(query)
+    # print((datetime.now()-start).seconds)
+    index()
+
+
+def index():
+    start = datetime.now()
+    GT_path = "/Users/infosense/Desktop/Index/a.json"
+    output_path = "/Users/infosense/Desktop/Index/annotated_GT.json"
+    input = open(GT_path)
+    with open(output_path,"a") as output:
+        lines = input.readlines()
+        for line in lines:
+            document = json.loads(line)
+            if extraction.get_text(document):
+                dic = {}
+                dic["id"] = document["_id"]
+                dic["self_extractions"] = {}
+                dic["extracted_text"] = document["extracted_text"]
+                for func in extraction.functionDic:
+                    if func != "name" and func != "number_of_individuals" and func != "location":
+                        dic["self_extractions"][func] = extraction.functionDic[func](document,False,False)
+                json.dump(dic,output)
+                output.write("\n")
     print((datetime.now()-start).seconds)
+
 
 def pipeline(query):
     #client = MongoClient()
@@ -367,10 +391,10 @@ def generate_formal_answer(query,result):
 def clarify(document,feature): #Determine which one is the right answer by word distance
     clarify_list = ["phone","hair_color","eye_color","height","weight","services"]
     clarify_result = []
-    candidates = extraction.functionDic[feature](document,True,True)
+    candidates = extraction.functionDic[feature](document,False,True)
     for func in clarify_list:
         if feature != func:
-            clarify_result.append(extraction.functionDic[func](document,True,True))
+            clarify_result.append(extraction.functionDic[func](document,False,True))
     scores = []
     for candidate in candidates:
         score = 0
@@ -380,6 +404,8 @@ def clarify(document,feature): #Determine which one is the right answer by word 
         scores.append(score)
     min_distance_index = scores.index(min(scores))
     print(candidates)
+    print(min_distance_index)
+    print(scores)
     return candidates[min_distance_index][1]
 
 
@@ -415,6 +441,7 @@ def answer_extraction(document,parsed_query_dic):
                 extraction_result[feature] = raw_result
         if len(set(extraction_result[feature]))>1:
             extraction_result[feature] = [clarify(document,feature)]
+            print(extraction_result[feature])
         # match_frequency += len(raw_result)
         # if raw_result:
         #     document["raw_content_percentage"] += 1.0

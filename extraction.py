@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import re,sys,json,yaml,os,webcolors,search
+import re,sys,json,yaml,os,webcolors,search,collections
 from fuzzywuzzy import fuzz
 from nltk.corpus import stopwords
 from datetime import date,timedelta
@@ -8,19 +8,22 @@ import phonenumbers
 
 
 def get_text(document):
-    if "extracted_text" in document["_source"]:
-        extract_text = document["_source"]["extracted_text"]
+    if "extracted_text" in document:
+        extract_text = document["extracted_text"]
         if extract_text:
             return extract_text
     try:
         extract_text = html_cleaner.make_clean_html(get_raw_content(document))
     except Exception as e:
         extract_text = ""
-    document["_source"]["extracted_text"] = extract_text
-    return extract_text
+    #document["extracted_text"] = extract_text
+    return ""
 
 def get_raw_content(document):
-    return document["_source"]["raw_content"]
+    if "raw_content" in document:
+        return document["raw_content"]
+    else:
+        return ""
 
 #Feature_list [1:is_extract_text,2:is_meta_data,3:raw_content_match percentage, 4:extracted_text_match percentage 5:meta_data_match percentage
 #6:raw_content_len, 7:extract_len, 8:match_frequency, 9:elastic_score, 10:raw_content_ave_distance, 11:extract_text_ave_dis
@@ -156,6 +159,7 @@ def address_recognition(document,is_raw_content,is_position):
     text_result= re.findall(addree_pattern,text_without_quotation)
     result = []
     for item in text_result:
+        #print(item)
         address_parts = item[0].split()
         if len(address_parts)>2:   #although only street number and streeName are required in the pattern, address consists of at least three parts.
             isValid = False
@@ -163,10 +167,16 @@ def address_recognition(document,is_raw_content,is_position):
                 if part.lower() in streetTypeString.lower() or part.lower() in nsew.lower():
                     isValid = True
             if isValid:
-                result.append(result_normalize(item[0]))
+                if is_position: #Find the index of the name of the street
+                    if item[5] in text:
+                        result.append((text.index(item[5])*1.0/len(text),result_normalize(item[0])))
+                    else:
+                        result.append((0.5,result_normalize(item[0])))
+                else:
+                    result.append(result_normalize(item[0]))
     return result
 
-def social_media_id_recognition(document,is_raw_content):
+def social_media_id_recognition(document,is_raw_content,is_position):
     """
     :param document:
     :param is_raw_content:
@@ -183,17 +193,25 @@ def social_media_id_recognition(document,is_raw_content):
     #extract social media ID in a url
     url_media_pattern = r"(%s).com/(.*)/"%media_str
     url_media_pattern_result = re.findall(url_media_pattern,text)
-    for item in url_media_pattern_result:
-        result.append(item[0]+"@"+item[1])
+    if is_position:
+        for item in re.finditer(url_media_pattern,text):
+            result.append((item.start()*1.0/len(text),item.groups()[0]+"@"+item.groups()[1]))
+    else:
+        for item in url_media_pattern_result:
+            result.append(item[0]+"@"+item[1])
     #extract social media ID in plain text
     plain_text_pattern = r"(%s): (\w+)\W"
     plain_text_pattern_result = re.findall(plain_text_pattern,text)
-    for item in plain_text_pattern_result:
-        result.append(item[0]+"@"+item[1])
+    if is_position:
+        for item in re.finditer(plain_text_pattern,text):
+            result.append((item.start(),item.groups()[0]+"@"+item.groups()[1]))
+    else:
+        for item in plain_text_pattern_result:
+            result.append(item[0]+"@"+item[1])
     return result
 
 
-def review_site_recognition(document,is_raw_content):
+def review_site_recognition(document,is_raw_content,is_position):
     #url_pattern = re.compile(r'(http[s]?://)|(www.)(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
     text = ""
     if is_raw_content:
@@ -202,16 +220,21 @@ def review_site_recognition(document,is_raw_content):
         text = get_text(document)
     review_site_list = ["eccie", "TER", "preferred411"]
     review_site = []
-    hyperlinks = hyperlink_recognition(document,is_raw_content)
-    if hyperlinks:
-        for link in hyperlinks:
-            for site in review_site_list:
-                if site in link:
+    hyperlinks = hyperlink_recognition(document,is_raw_content,is_position)
+    for link in hyperlinks:
+        tmp = link
+        for site in review_site_list:
+            if is_position:
+                tmp = link[1]
+                if site in tmp:
                     if site == "eccie.net":
                         site = "eccie"
                     if site == "theeroticreview":
                         site = "TER"
-                    review_site.append(site)
+                    if is_position:
+                        review_site.append((tmp[0],site))
+                    else:
+                        review_site.append(site)
     return review_site
 
 def name_recognition(document,is_raw_content,is_position):
@@ -269,7 +292,7 @@ def location_recognition(document,is_raw_content,is_position):
     #print(result)
     return result
 
-def age_recognition(document,is_raw_content):
+def age_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -290,15 +313,24 @@ def age_recognition(document,is_raw_content):
             if i>0 and int(age)%10 == 0:  # check if it satisfies the pattern: early,mid,late 30s
                 if "early" in words[i-1].lower():
                     #result.append([age,str(int(age)+1),str(int(age)+2),str(int(age)+3)])
-                    result.append(int(age)+2)
+                    if is_position:
+                        result.append((i*1.0/len(words),int(age)+2))
+                    else:
+                        result.append(int(age)+2)
                     break
                 if "mid" in words[i-1].lower():
                     #result.append([str(int(age)+4),str(int(age)+5),str(int(age)+6)])
-                    result.append(int(age)+5)
+                    if is_position:
+                        result.append((i*1.0/len(words),int(age)+5))
+                    else:
+                        result.append(int(age)+5)
                     break
                 if "late" in words[i-1].lower():
                     #result.append([str(int(age)+7),str(int(age)+8),str(int(age)+9)])
-                    result.append(int(age)+8)
+                    if is_position:
+                        result.append((i*1.0/len(words),int(age)+8))
+                    else:
+                        result.append(int(age)+8)
                     break
             for word in post_match_field:
                 if word.lower() in post_match_words:
@@ -310,18 +342,25 @@ def age_recognition(document,is_raw_content):
                     is_validate_age = True
                     break
             if is_validate_age:
-                result.append(int(age))
+                if is_position:
+                    result.append((i*1.0/len(words),int(age)))
+                else:
+                    result.append(int(age))
     birthday_pattern = re.compile(r"(?i)birthday[^A-Za-z0-9]{1,3}((?:19[0-9]{2})|(?:20[01][0-9]))")  #pattern of bodyrubresumes.com
     birthday_pattern_result = re.findall(birthday_pattern,text)
-    for item in birthday_pattern_result:
-        result.append(2016-int(item))
-    if "extractions" in document["_source"]:
-        crawl_extractions = document["_source"]["extractions"]
-        if "age" in crawl_extractions:
-            for age in crawl_extractions["age"]["results"]:
-                if age.isdigit():
-                    if int(age) not in result:
-                        result.append(age)
+    if is_position:
+        for item in re.finditer(birthday_pattern,text):
+            result.append((item.start(),2016-int(item.groups()[0])))
+    else:
+        for item in birthday_pattern_result:
+            result.append(2016-int(item))
+    # if "extractions" in document["_source"]:
+    #     crawl_extractions = document["_source"]["extractions"]
+    #     if "age" in crawl_extractions:
+    #         for age in crawl_extractions["age"]["results"]:
+    #             if age.isdigit():
+    #                 if int(age) not in result:
+    #                     result.append(age)
     return result
     # age_pattern1 = re.compile(r"(?i)age[^A-Za-z0-9]{1,3}([1-6][0-9])[^A-Za-z0-9]")
     # age_pattern2 = re.compile(r"((?i)(?:i'm|im|i am)?[^A-Za-z0-9]?[1-6][0-9])(?:[^A-Za-z0-9]?(?i)(?:years|yrs|year)[^A-Za-z0-9](?:old)?)")
@@ -335,7 +374,7 @@ def age_recognition(document,is_raw_content):
     # return result
 
 
-def nationality_recognition(document,is_raw_content):
+def nationality_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -345,26 +384,20 @@ def nationality_recognition(document,is_raw_content):
     with open(nationality_filepath) as f:
         nationality_list = ','.join(f.readlines()).split(",")
         f.close()
-        words = text.split()
-        #raw_words = raw_content.split()
+        text_without_quotation = re.sub(r"[^\w\s]"," ",text)
+        words = text_without_quotation.split()
         text_result = []
-        #raw_content_result = []
-        for word in words:
-            word_norm = word.lower().capitalize()
+        for i in range(len(words)):
+            word_norm = words[i].lower().capitalize()
             if word_norm in nationality_list:
-                text_result.append(result_normalize(word_norm))
-        # for word in raw_words:
-        #     word_norm = word.lower().capitalize()
-        #     if word_norm in nationality_list:
-        #         raw_content_result.append(result_normalize(word_norm))
-        # if len(text_result)>len(raw_content_result):
-        #     return text_result
-        # else:
-        #     return raw_content_result
+                if is_position:
+                    text_result.append((i*1.0/len(words),result_normalize(word_norm)))
+                else:
+                    text_result.append(result_normalize(word_norm))
         return text_result
 
 
-def ethnicity_recognition(document,is_raw_content):
+def ethnicity_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -378,17 +411,23 @@ def ethnicity_recognition(document,is_raw_content):
     f.close()
     text = re.sub("\W"," ",text)
     words = text.split()
-    for word in words:
-            word_norm = word.lower().capitalize()
+    for i in range(len(words)):
+            word_norm = words[i].lower().capitalize()
             if word_norm in nationality_list:
-                result.append(word_norm)
+                if is_position:
+                    result.append((i*1.0/len(words),word_norm))
+                else:
+                    result.append(word_norm)
     lowercase_text = text.lower()
     for word in ethnicity_arr:
         if word in lowercase_text:
-            result.append(word)
+            if is_position:
+                result.append((lowercase_text.index(word)/len(lowercase_text),word))
+            else:
+                result.append(word)
     return result
 
-def price_recognition(document,is_raw_content):
+def price_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -409,36 +448,75 @@ def price_recognition(document,is_raw_content):
     preDollarPrice = [price1, price3, price4]
     otherPrice = [price2, price5]
     split = text.split(" ")
-    priceList = []
+    # priceDict = collections.OrderedDict()
+    priceDict = {}
     currency = ["$", "€", "¥", "£", "$", "Fr", "¥", "kr", "Ꝑ", "ք", "₩", "R", "R$", "₺", "₹"]
-    pre_price_indicator = ["Hour:", "night:", "price:", "Price:", "Hourly"]
-    post_price_indicator = ["dollar", "dollars", "jewel", "jewels", "rose", "roses", "/hour", "/Hour", "/HOUR", "/night", "/Night", "/NIGHT", "$"] 
+    pre_price_indicator = ["Hour:", "night:", "price:", "Price:", "Hourly", "H/H", "H", "special", "Special", "price", "Price", "$", "€", "¥", "£", "Fr", "kr", "Ꝑ"]
+    post_price_indicator = ["dollar", "dollars", "jewel", "jewels", "rose", "roses", "/hour", "/Hour", "/HOUR", "/night", "/Night", "/NIGHT", "$", "H/H", "H", "AM", "PM", "all", "include", "All", "Include"]
+    time1 = "(\d)(\d)?((AM)|(PM))(-)(-)?(\d)(\d)?((AM)|(PM))"
+    time2 = "(\d)(\d)?((AM)|(PM))(to)(\d)(\d)?((AM)|(PM))"
+    time_indicator = [time1, time2]
+    ans = []
     for i in range(len(split)):
+        # cur = split[i]
+        # print(cur)
         if split[i] in post_price_indicator:
             for pricePat in preDollarPrice:
                 #print((split[i], split[i - 1]))
                 price = re.findall(pricePat, split[i - 1])
                 if price:
-                    priceList.append('$' + re.sub('\D', '', split[i - 1]))  
+                    # priceDict[i - 1] = ('$' + re.sub('\D', '', split[i - 1]))
+                    if i - 1 not in priceDict:
+                        priceDict[i - 1] = split[i - 1]
+                if i not in priceDict:
+                    priceDict[i] = split[i]
                     #print(priceList[i-1])
-        elif split[i] in pre_price_indicator:
+        if split[i] in pre_price_indicator:
             for pricePat in preDollarPrice:
                 price = re.findall(pricePat, split[i + 1])
                 if price:
                     #print((split[i], split[i + 1]))
-                    for cur in currency:
-                        if cur in split[i + 1]:
-                            priceList.append(cur + re.sub('\D', '', split[i + 1]))
-                        else:
-                            priceList.append('$' + re.sub('\D', '', split[i + 1]))
+                    # for cur in currency:
+                    #     if cur in split[i + 1]:
+                    #         priceList.append(cur + re.sub('\D', '', split[i + 1]))
+                    #     else:
+                    #         priceList.append('$' + re.sub('\D', '', split[i + 1]))
+
+                    if i + 1 not in priceDict:
+                        priceDict[i + 1] = split[i + 1]
+                if i not in priceDict:
+                    priceDict[i] = split[i]
+
+        for pricePat in otherPrice:
+            price = re.findall(pricePat, split[i])
+            if price:
+                if i not in priceDict:
+                    priceDict[i] = price[0][0]
+                #print(price[0][0])
+            #print(priceList[i])
+        for timePat in time_indicator:
+            time = re.findall(timePat, split[i])
+            if time:
+                if i not in priceDict:
+                    priceDict[i] = split[i]
+    priceDict = collections.OrderedDict(sorted(priceDict.items(), key=lambda t: t[0]))
+    prevKey = 0
+    price = ""
+    for key in priceDict:
+        # print(priceDict[key])
+        if key - prevKey <= 2:
+            price += ' ' + priceDict[key]
         else:
-            for pricePat in otherPrice:
-                price = re.findall(pricePat, split[i])
-                if price:
-                    priceList.append(price[0][0])
-                    #print(price[0][0])
-                #print(priceList[i])
-    return(priceList)
+            if price != "":
+                price = price.strip(" ")
+                ans += price,
+                price = priceDict[key]
+        prevKey = key
+    if price != "":
+        price = price.strip(" ")
+        ans += price,
+    # return(priceDict)
+    return(ans)
 
 def hair_color_recognition(document,is_raw_content,is_position):
     text = ""
@@ -521,7 +599,7 @@ def eye_color_recognition(document,is_raw_content,is_position):
             hair_color = False
             if is_position:
                 position = text[position+4:].index("eye")
-            for j in range(i+1,i+6): #look for color vocabulary after eyes
+            for j in range(i+1,min(len(words),i+6)): #look for color vocabulary after eyes
                 if words[j].lower() in color_dic:
                     color_str = words[j].lower()
                 if fuzz.ratio(words[i].lower(),"hair")>=75: #check if eyes color is around
@@ -585,8 +663,8 @@ def services_recognition(document,is_raw_content,is_position):
 def tattoo_recognition(document,is_raw_content):
     return ""
 
-def multi_providers(document,is_raw_content):
-    return number_of_individuals_recognition(document,is_raw_content)
+def multi_providers(document,is_raw_content,is_position):
+    return number_of_individuals_recognition(document,is_raw_content,is_position)
 
 def height_recognition(document,is_raw_content,is_position):
     text = ""
@@ -595,22 +673,23 @@ def height_recognition(document,is_raw_content,is_position):
     else:
         text = get_text(document)
     #inch pattern
-    height_pattern = r"(?:^|\W)([3-9])'[ ]?([0-9])?(?:\")?"
-    height_pattern_result = re.findall(height_pattern,text)
+    inch_pattern = r"(?:^|\W)([3-9])'[ ]?([0-9])?(?:\")?"
+    inch_pattern_result = re.findall(inch_pattern,text)
     result = []
     if is_position:
-        for item in re.finditer(height_pattern,text):
+        for item in re.finditer(inch_pattern,text):
             if item.groups()[1]:
                 result.append((item.start()*1.0/len(text),str(int(item.groups()[0])*12+int(item.groups()[1]))))
             else:
                 result.append((item.start()*1.0/len(text),str(int(item.groups()[0]*12))))
     else:
-        for item in height_pattern_result:
+        for item in inch_pattern_result:
             if item[1]: #inch is present
                 result.append(str(int(item[0])*12+int(item[1])))
             else:
                 result.append(str(int(item[0])*12))
     #cm pattern
+    cm_pattern = r"(?:^|\W)([12][0-9]{2}"
     return result
 
 def weight_recognition(document,is_raw_content,is_position):
@@ -803,7 +882,7 @@ def gender_recognition(document,is_raw_content):
     return result
 
 
-def number_of_individuals_recognition(document,is_raw_content):
+def number_of_individuals_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -811,15 +890,15 @@ def number_of_individuals_recognition(document,is_raw_content):
         text = get_text(document)
     if "twin" in text:
         return [2]
-    names = name_recognition(document,is_raw_content)
+    names = name_recognition(document,is_raw_content,is_position)
     for i in range(len(names)):
         names[i] = result_normalize(names[i])
     names = list(set(names))
-    eye_colors = eye_color_recognition(document,is_raw_content)
-    hair_colors = hair_color_recognition(document,is_raw_content)
-    ages = age_recognition(document,is_raw_content)
-    nationalities = nationality_recognition(document,is_raw_content)
-    ethnicities = ethnicity_recognition(document,is_raw_content)
+    eye_colors = eye_color_recognition(document,is_raw_content,is_position)
+    hair_colors = hair_color_recognition(document,is_raw_content,is_position)
+    ages = age_recognition(document,is_raw_content,is_position)
+    nationalities = nationality_recognition(document,is_raw_content,is_position)
+    ethnicities = ethnicity_recognition(document,is_raw_content,is_position)
     number_list = [names,eye_colors,hair_colors,ages,nationalities,ethnicities]
     #print(number_list)
     number_list.sort(key=lambda k:len(k))
@@ -890,15 +969,21 @@ def result_normalize(result):
         normedResult = re.sub("[^\w\s]"," ",result.lower())
     return normedResult
 
-def hyperlink_recognition(document,is_raw_content):
+def hyperlink_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
     else:
         text = get_text(document)
     pattern = "href=\"(.*?)\""
-    hyperlinks = re.findall(pattern, text)
-    return hyperlinks
+    result = []
+    if is_position:
+        for item in re.finditer(pattern,text):
+            result.append((item.start(),"".join(item.groups())))
+    else:
+        for item in re.findall(pattern,text):
+            result.append(item)
+    return result
 
 def drug_use_recognition(document,is_raw_content):
     result = []
