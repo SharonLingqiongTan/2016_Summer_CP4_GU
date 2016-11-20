@@ -543,7 +543,7 @@ def hair_color_recognition(document,is_raw_content,is_position):
                 if j<len(words):
                     if words[j].lower() in color_dic:
                         color_str = words[j].lower()
-                    if fuzz.ratio(words[i].lower(),"eyes")>=75: #check if eyes color is around
+                    if fuzz.ratio(words[j].lower(),"eyes")>=75: #check if eyes color is around
                         eye_color = True
             if color_str:
                 if eye_color:
@@ -594,15 +594,15 @@ def eye_color_recognition(document,is_raw_content,is_position):
     words = text_without_quotation.split()
     position = -4
     for i in range(len(words)):
-        if fuzz.ratio(words[i].lower(),"eyes")>=75: #judge if word and hair are similar
+        if fuzz.ratio(words[i].lower(),"eyes")>=75: #judge if word and eyes are similar
             color_str = ""
             hair_color = False
             if is_position:
                 position = text[position+4:].index("eye")
-            for j in range(i+1,min(len(words),i+6)): #look for color vocabulary after eyes
+            for j in range(i+1,min(len(words),i+8)): #look for color vocabulary after eyes
                 if words[j].lower() in color_dic:
                     color_str = words[j].lower()
-                if fuzz.ratio(words[i].lower(),"hair")>=75: #check if eyes color is around
+                if fuzz.ratio(words[j].lower(),"hair")>=75: #check if eyes color is around
                     hair_color = True
             if color_str:
                 if hair_color:
