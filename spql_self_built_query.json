@@ -829,7 +829,7 @@
         "1223.7": {
             "parsed": {
                 "group-by": {
-                    "group-variable": "?address", 
+                    "group-variable": "?street_address",
                     "limit": 1, 
                     "order-variable": "?count", 
                     "sorted-order": "desc"
@@ -850,7 +850,7 @@
                         }, 
                         {
                             "type": "simple", 
-                            "variable": "?address"
+                            "variable": "?street_address"
                         }
                     ]
                 }, 
@@ -863,8 +863,8 @@
                         }, 
                         {
                             "isOptional": false, 
-                            "predicate": "address", 
-                            "variable": "?address"
+                            "predicate": "street_address",
+                            "variable": "?street_address"
                         }
                     ], 
                     "type": "Ad", 
@@ -1069,7 +1069,7 @@
         "1223.12": {
             "parsed": {
                 "group-by": {
-                    "group-variable": "?number_of_individuals",
+                    "group-variable": "?multiple_providers",
                     "limit": 1, 
                     "order-variable": "?count"
                 }, 
@@ -1089,7 +1089,7 @@
                         }, 
                         {
                             "type": "simple", 
-                            "variable": "?number_of_individuals"
+                            "variable": "?multiple_providers"
                         }
                     ]
                 }, 
@@ -1102,8 +1102,8 @@
                         }, 
                         {
                             "isOptional": false, 
-                            "predicate": "number_of_individuals", 
-                            "variable": "?number_of_individuals"
+                            "predicate": "multiple_providers",
+                            "variable": "?multiple_providers"
                         }
                     ], 
                     "type": "Ad", 

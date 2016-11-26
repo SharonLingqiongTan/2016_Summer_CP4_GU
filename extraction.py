@@ -8,8 +8,8 @@ import phonenumbers
 
 
 def get_text(document):
-    if "extracted_text" in document:
-        extract_text = document["extracted_text"]
+    if "extracted_text" in document["_source"]:
+        extract_text = document["_source"]["extracted_text"]
         if extract_text:
             return extract_text
     try:
@@ -20,8 +20,8 @@ def get_text(document):
     return ""
 
 def get_raw_content(document):
-    if "raw_content" in document:
-        return document["raw_content"]
+    if "raw_content" in document["_source"]:
+        return document["_source"]["raw_content"]
     else:
         return ""
 
@@ -524,6 +524,8 @@ def hair_color_recognition(document,is_raw_content,is_position):
         text = get_raw_content(document)
     else:
         text = get_text(document)
+    if not text:
+        return []
     normalized_color = ["blonde", "brown", "black", "red", "auburn", "chestnut", "gray", "white","dark"]
     color_dic = webcolors.CSS3_NAMES_TO_HEX
     for color in normalized_color:
@@ -532,13 +534,13 @@ def hair_color_recognition(document,is_raw_content,is_position):
     text_result = []
     text_without_quotation = re.sub(r'[^\w\s]','',text)
     words = text_without_quotation.split()
-    position = -4
+    #position = -4
     for i in range(len(words)):
-        if fuzz.ratio(words[i].lower(),"hair")>=75: #judge if word and hair are similar
+        if words[i].lower() == "hair": #judge if word and hair are similar
             color_str = ""
             eye_color = False
-            if is_position:
-                position = text[position+4:].index("hair")
+            # if is_position:
+            #     position += text[position+4:].index(words[i])
             for j in range(i+1,i+6): #look for color vocabulary after hair
                 if j<len(words):
                     if words[j].lower() in color_dic:
@@ -553,17 +555,17 @@ def hair_color_recognition(document,is_raw_content,is_position):
                             hair_color_str = words[j].lower()
                     if hair_color_str:
                         if is_position:
-                            text_result.append((position*1.0/len(text),hair_color_str))
+                            text_result.append((i*1.0/len(words),hair_color_str))
                         else:
                             text_result.append(hair_color_str)
                     else:
                         if is_position:
-                            text_result.append((position*1.0/len(text),color_str))
+                            text_result.append((i*1.0/len(words),color_str))
                         else:
                             text_result.append(color_str)
                 else:
                     if is_position:
-                        text_result.append((position*1.0/len(text),color_str))
+                        text_result.append((i*1.0/len(words),color_str))
                     else:
                         text_result.append(color_str)
             else:
@@ -573,7 +575,7 @@ def hair_color_recognition(document,is_raw_content,is_position):
                         hair_color_str = words[j].lower()
                 if hair_color_str:
                     if is_position:
-                        text_result.append((position*1.0/len(text),hair_color_str))
+                        text_result.append((i*1.0/len(words),hair_color_str))
                     else:
                         text_result.append(hair_color_str)
     return text_result
@@ -584,6 +586,8 @@ def eye_color_recognition(document,is_raw_content,is_position):
         text = get_raw_content(document)
     else:
         text = get_text(document)
+    if not text:
+        return []
     normalized_color = ["blue", "brown", "green", "hazel", "gray", "amber"]
     color_dic = webcolors.CSS3_NAMES_TO_HEX
     for color in normalized_color:
@@ -592,13 +596,13 @@ def eye_color_recognition(document,is_raw_content,is_position):
     text_result = []
     text_without_quotation = re.sub(r'[^\w\s]','',text)
     words = text_without_quotation.split()
-    position = -4
+    #position = -4
     for i in range(len(words)):
-        if fuzz.ratio(words[i].lower(),"eyes")>=75: #judge if word and eyes are similar
+        if words[i] == "eye" or words[i] == "eyes": #judge if word and eyes are similar
             color_str = ""
             hair_color = False
-            if is_position:
-                position = text[position+4:].index("eye")
+            # if is_position:
+            #     position += text[position+4:].index(words[i])
             for j in range(i+1,min(len(words),i+8)): #look for color vocabulary after eyes
                 if words[j].lower() in color_dic:
                     color_str = words[j].lower()
@@ -612,17 +616,17 @@ def eye_color_recognition(document,is_raw_content,is_position):
                             eye_color_str = words[j].lower()
                     if eye_color_str:
                         if is_position:
-                            text_result.append((position*1.0/len(text),eye_color_str))
+                            text_result.append((i*1.0/len(words),eye_color_str))
                         else:
                             text_result.append(eye_color_str)
                     else:
                         if is_position:
-                            text_result.append((position*1.0/len(text),color_str))
+                            text_result.append((i*1.0/len(words),color_str))
                         else:
                             text_result.append(color_str)
                 else:
                     if is_position:
-                        text_result.append((position*1.0/len(text),color_str))
+                        text_result.append((i*1.0/len(words),color_str))
                     else:
                         text_result.append(color_str)
             else:
@@ -632,7 +636,7 @@ def eye_color_recognition(document,is_raw_content,is_position):
                         eye_color_str = words[j].lower()
                 if eye_color_str:
                     if is_position:
-                        text_result.append((position*1.0/len(text),eye_color_str))
+                        text_result.append((i*1.0/len(words),eye_color_str))
                     else:
                         text_result.append(eye_color_str)
     return text_result
@@ -660,13 +664,19 @@ def services_recognition(document,is_raw_content,is_position):
                 result.append(service.lower())
     return result
 
-def tattoo_recognition(document,is_raw_content):
+def tattoo_recognition(document,is_raw_content,is_position):
     return ""
 
 def multi_providers(document,is_raw_content,is_position):
     return number_of_individuals_recognition(document,is_raw_content,is_position)
 
 def height_recognition(document,is_raw_content,is_position):
+    """
+    :param document: Dictionary
+    :param is_raw_content: Bool
+    :param is_position: Bool
+    :return: list[int] in cm unit
+    """
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -679,20 +689,32 @@ def height_recognition(document,is_raw_content,is_position):
     if is_position:
         for item in re.finditer(inch_pattern,text):
             if item.groups()[1]:
-                result.append((item.start()*1.0/len(text),str(int(item.groups()[0])*12+int(item.groups()[1]))))
+                result.append( ( item.start()*1.0/len(text),int((int(item.groups()[0])*12+int(item.groups()[1]))*2.54) ))
             else:
-                result.append((item.start()*1.0/len(text),str(int(item.groups()[0]*12))))
+                result.append(( item.start()*1.0/len(text),int((int(item.groups()[0]*12))*2.54) ))
     else:
         for item in inch_pattern_result:
             if item[1]: #inch is present
-                result.append(str(int(item[0])*12+int(item[1])))
+                result.append(int((int(item[0])*12+int(item[1]))*2.54))
             else:
-                result.append(str(int(item[0])*12))
+                result.append(int((int(item[0])*12)*2.54))
     #cm pattern
-    cm_pattern = r"(?:^|\W)([12][0-9]{2}"
+    cm_pattern = r"(?:^|\W)([12][0-9]{2})[ ]?cm(?:\W|$)"
+    if is_position:
+        for item in re.finditer(cm_pattern,text):
+            result.append( (item.start()*1.0/len(text),int(item.groups()[0])) )
+    else:
+        for item in re.findall(cm_pattern,text):
+            result.append(int(item))
     return result
 
 def weight_recognition(document,is_raw_content,is_position):
+    """
+    :param document: Dictionary
+    :param is_raw_content: Bool
+    :param is_position: Bool
+    :return: list[int]: in lbs unit
+    """
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -704,13 +726,13 @@ def weight_recognition(document,is_raw_content,is_position):
     if is_position:
         for item in re.finditer(weight_pattern,text):
             if item.groups()[1] == "kg":
-                result.append((item.start()*1.0/len(text),str(int(float(item.groups()[0]*2.2)))))
+                result.append( (item.start()*1.0/len(text),int(float(item.groups()[0])*2.2) ) )
             else:
-                result.append((item.start()*1.0/len(text),item.groups()[1]))
+                result.append((item.start()*1.0/len(text),int(item.groups()[0])))
     else:
         for item in weight_pattern_result:
             if item[1] == "kg":
-                result.append(str(int(float(item[0])*2.2)))
+                result.append(int(float(item[0])*2.2))
             else:
                 result.append(item[0])
     return result
@@ -737,7 +759,7 @@ def organization_recognition(document,is_raw_content):
     return result
 
 #return all the extracted dates in dictioanry format -- date_dic = {day:int month:int year: int}, if date is not exact(more than a week ago), use an interval(int_low,int_high) instead
-def posting_date_recognition(document,is_raw_content):
+def posting_date_recognition(document,is_raw_content,is_position):
     text = ""
     if is_raw_content:
         text = get_raw_content(document)
@@ -1101,10 +1123,10 @@ def color_recognition(document,is_raw_content):
 
 if __name__ != "__main__":
     global functionDic
-    functionDic = {"address": address_recognition,"age":age_recognition,
+    functionDic = {"post_date":posting_date_recognition,"tattoos":tattoo_recognition,"street_address": address_recognition,"age":age_recognition,
                    "name":name_recognition, "hair_color":hair_color_recognition,"eye_color":eye_color_recognition,"nationality":nationality_recognition,
                    "ethnicity":ethnicity_recognition,"review_site":review_site_recognition,"email": email_recognition,"phone": phone_recognition,
-                   "location":location_recognition,"price":price_recognition,"number_of_individuals": number_of_individuals_recognition,
+                   "location":location_recognition,"price":price_recognition,"multiple_providers": number_of_individuals_recognition,
                     "social_media_id":social_media_id_recognition,"services":services_recognition,"height":height_recognition,"weight":weight_recognition
                    }
     global feature_list

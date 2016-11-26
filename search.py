@@ -1,25 +1,29 @@
 # -*- coding: utf-8 -*-
-import certifi,os,yaml,sys,re
+import certifi,os,yaml,sys,re,json
 from elasticsearch import Elasticsearch
 import extraction
 
 def query_retrival(query_path): #parse the json query file into a list of queries
-    f = open(query_path)
-    lines = f.readlines()
-    f.close()
-    queries = yaml.load("".join(line.strip("\n") for line in lines))
-    query_list = []
-    for query_type in queries:
-        for query_id in queries[query_type]:
-            query = queries[query_type][query_id]["parsed"].copy()
-            query["type"] = query_type.lower()
-            query["id"] = query_id
-            query_list.append(query)
-    return query_list
+    # f = open(query_path)
+    # query_list = json.load(f,strict = False)
+    # f.close()
+    # return query_list
+	f = open(query_path)
+	lines = f.readlines()
+	f.close()
+	queries = yaml.load("".join(line.strip("\n") for line in lines))
+	query_list = []
+	for query_type in queries:
+		for query_id in queries[query_type]:
+			query = queries[query_type][query_id]["parsed"].copy()
+			query["type"] = query_type.lower()
+			query["id"] = query_id
+			query_list.append(query)
+	return query_list
 
 def query_parse(query):
     skin_color_list = ["white","yellow","black"]
-    search_ignore_list = ["obfuscation","number_of_individuals","gender"]
+    search_ignore_list = ["obfuscation","multiple_providers","gender"]
     where = query["where"]
     clauses = where["clauses"]
     filters = {}
@@ -66,7 +70,7 @@ def query_parse(query):
                     must_search_field["phone"] = clause["constraint"]
                     required_match_field["phone"] = clause["constraint"]
                 else:
-                    required_match_field["physical_address"] = clause["constraint"]
+                    required_match_field["street_address"] = clause["constraint"]
                 continue
             else:
                 must_search_field[predicate] = clause["constraint"]
@@ -122,6 +126,115 @@ def query_parse(query):
     parsed_dic["answer_field"] = answer_field
     return parsed_dic
 
+# def query_parse(query):  # input query - json
+# 	skin_color_list = ["white","yellow","black"]
+# 	# search_ignore_list = ["obfuscation","multiple_provider"] # No gender feature
+# 	query_id = query['id']
+# 	query_type = query['type']
+# 	sparql = query['SPARQL'][0]
+# 	lines = sparql.split('\n')
+# 	parsed_dic = {}
+# 	ans_field = {}
+# 	must_search = {}
+# 	should_search = {}
+# 	must_not_search = {}
+# 	must_match = {} #Validation fields after document retrieval
+# 	should_match = {} #Optional fields after document retrieval
+# 	group = {}
+# 	for line in lines:
+# 		line = line.strip()
+# 		words = line.split(' ')
+# 		if line.startswith('PREFIX'):
+# 			continue
+# 		if line.startswith('SELECT'):
+# 			ans_field[words[1][1:]]	= words[1]
+# 		if line.startswith('qpr:'):
+# 			line = line[:-1].strip() #remove the punctuation at the end
+# 			words = line.split(" ",1)
+# 			if not words[1].startswith("?"): #Given conditions
+# 				words[1] = words[1][1:-1]
+# 				predicate = words[0][4:]
+# 				constraint = words[1]
+# 				# Need to refine search_ignore_list
+# 				# if predicate in search_ignore_list:
+# 					# pass
+# 				if predicate == 'ethnicity':
+# 					if constraint in skin_color_list:
+# 						should_search['ethnicity'] = constraint
+# 					else:
+# 						must_search['ethnicity'] = constraint
+# 					must_match[predicate] = constraint
+# 				# search directly
+# 				elif predicate == 'phone':
+# 					should_search['phone'] = constraint
+# 					must_match[predicate] = constraint
+# 				elif predicate == 'location':
+# 					location = constraint.split(',')
+# 					if location:
+# 						should_search['location'] = constraint
+# 						if len(location)>1:
+# 							if location[1].lower().capitalize() in extraction.nationality_list:
+# 								country = location[1]
+# 								if location[1].lower() == 'thailand':
+# 									country = 'thai'
+# 									must_search['location'] = location[0]+' AND '+country
+# 								else:
+# 									must_search['location'] = location[0]
+# 						else:
+# 							must_search['location'] = location[0]
+# 						must_match['location'] = constraint
+#
+# 				# elif predicate = 'tatoos':
+# 				elif predicate == 'multiple_providers':
+# 					should_search['multiple_providers'] = constraint
+# 					must_match[predicate] = constraint
+# 				elif predicate == 'hair_color':
+# 					should_search['hair_color'] = constraint
+# 					must_match[predicate] = constraint
+# 					must_search[predicate] = constraint
+# 				elif predicate == 'eye_color':
+# 					should_search['eye_color'] = constraint
+# 					must_match[predicate] = constraint
+# 					must_search[predicate] = constraint
+# 				# cluster query
+# 				elif predicate == 'seed':
+# 					if "@" in constraint:
+# 						must_search['email'] = constraint
+# 						must_match['email'] = constraint
+# 					elif constraint.isdigit():
+# 						must_search['phone'] = constraint
+# 						must_match['phone'] = constraint
+# 					else:
+# 						must_match['physical_address'] = constraint
+# 				else:
+# 					must_search[predicate] = constraint
+# 					must_match[predicate] = constraint # email, street_address, social_media_id, review_site_id, age, price, services, height, weight, post_date
+#
+#
+# 		if line.startswith('GROUP BY'):
+# 			ans_pattern = '(?:\?)([a-z]+)'
+# 			for word in words:
+# 				group_variable = re.findall(ans_pattern, word)
+# 				group['group_by'] = group_variable
+# 		if line.startswith('ORDER BY'):
+# 			for word in words:
+# 				if 'DESC' in word:
+# 					group['order_by'] = 'DESC'
+# 				elif 'ASEC' in word:
+# 					group['order_by'] = 'ASEC'
+# 		if line.startswith("LIMIT"):
+# 			group["limit"] = int(line.split()[1])
+#
+# 	parsed_dic['answer_field'] = ans_field
+# 	parsed_dic['must_search_field'] = must_search
+# 	parsed_dic['should_search_field'] = should_search
+# 	parsed_dic['must_not_field'] = must_not_search
+# 	parsed_dic['required_match_field'] = must_match
+# 	parsed_dic['optional_match_field'] = should_match
+# 	parsed_dic['group'] = group
+# 	return parsed_dic
+
+
 def query_body_build(parsed_query):
     must_list = []
     should_list = []
@@ -129,6 +242,7 @@ def query_body_build(parsed_query):
     must_search_dic = parsed_query["must_search_field"]
     should_search_dic = parsed_query["should_search_field"]
     must_not_dic = parsed_query["must_not_field"]
+    answer_field = parsed_query["answer_field"]
     #month_dic = {"01":"(Jan OR January OR 1)","02":"(Feb OR February OR 2)","03":"(March OR Mar OR 3","04":"April OR Apr OR 4","05":"May OR 5","06":"June OR Jun OR 6"}
     for condition in must_search_dic:
         if condition == "phone": #phone number usually can not be searched directly
@@ -140,7 +254,6 @@ def query_body_build(parsed_query):
                 must_list.append(must_search_dic[condition][3:6])
                 must_list.append(must_search_dic[condition][6:])
                 should_list.append(must_search_dic[condition][:3]+"-"+must_search_dic[condition][3:6]+"-"+must_search_dic[condition][6:])
-            should_list.append(must_search_dic[condition])
         elif condition == "posting_date":
             calendar = must_search_dic[condition].split("-")
             if len(calendar) == 3: #year,month,day are all included
@@ -151,20 +264,23 @@ def query_body_build(parsed_query):
                 #must_list.append(month_dic[calendar[0]])
                 must_list.append(calendar[1])
         elif condition == "eye_color":
-            if must_search_dic[condition] == "eyes":
-                must_list.append("eyes")
-            else:
-                must_list.append(must_search_dic[condition]+"eyes")
+            must_list.append("eye")
         elif condition == "hair_color":
-            if must_search_dic[condition] == "hair":
-                must_list.append("hair")
-            else:
-                must_list.append(must_search_dic[condition]+"hair")
+            must_list.append("hair")
+        elif condition == "ethnicity":
+            should_list.append("ethnicity")
+        elif condition == "nationality":
+            should_list.append("nationality")
         else:
             must_list.append(must_search_dic[condition])
 
     for condition in should_search_dic:
         should_list.append(should_search_dic[condition])
+
+    feature_should_search_map = {"tattoos":"tattoo","name":"name","streeet_address":"address","age":"age","hair_color":"hair","eye_color":"eye","nationality":"nationality","ethnicity":"ethnicity","review_site":"review","email":"email","phone":"phone","location":"location","price":"","multiple_providers":"","social_media_id":"","services":"","height":"height","weight":"weight","post_date":"posted"}
+    for field in answer_field:
+        if feature_should_search_map[field]:
+            should_list.append(feature_should_search_map[field])
 
     for condition in must_not_dic:
         must_not_list.append(must_not_dic[condition])
@@ -174,10 +290,10 @@ def query_body_build(parsed_query):
     for word in should_list:
         query_dic = {}
         query_dic["match"] = {}
-        query_dic["match"]["raw_content"] = word
+        query_dic["match"]["extracted_text"] = word
         should_arr.append(query_dic)
     size = 3000
-    body = {"size":size,"query":{"bool":{"must":{"match":{"raw_content": must_str}}, "must_not":[{"match": {"extracted_text": must_not_str}},{"match": {"raw_content": must_not_str}}], "should": should_arr}}}
+    body = {"size":size,"query":{"bool":{"must":{"match":{"extracted_text": must_str}}, "must_not":[{"match": {"extracted_text": must_not_str}},{"match": {"raw_content": must_not_str}}], "should": should_arr}}}
     return body
 
 def elastic_search(query_body):
@@ -189,6 +305,7 @@ def elastic_search(query_body):
         verify_certs = True,
         ca_certs=certifi.where(),
     )
+    #es = Elasticsearch()
     response = es.search(body=query_body,request_timeout=60)
     documents = response["hits"]["hits"]
     return documents
