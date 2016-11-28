@@ -299,14 +299,14 @@ def cluster(query, search_round):
 def build_dictionary(documents, parsed_query_dic, searched_ads):
     annotated_raw_contents = []
     annotated_clean_contents = []
-    if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "multiple_providers" in parsed_query_dic["answer_field"]:
+    if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"]:
         annotated_raw_contents,annotated_clean_contents = annotator(documents)
     functionDic = extraction.functionDic
     dicts = []
     for i in range(len(documents)):
         dic = {}
         adID = documents[i]["_id"]
-        if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"] or "multiple_providers" in parsed_query_dic["answer_field"]:
+        if "location" in parsed_query_dic["answer_field"] or "name" in parsed_query_dic["answer_field"]:
             documents[i]["annotated_raw_content"] = annotated_raw_contents[i]
             documents[i]["annotated_clean_content"] = annotated_clean_contents[i]
         if adID not in searched_ads:
@@ -314,8 +314,8 @@ def build_dictionary(documents, parsed_query_dic, searched_ads):
             extracted_text = extraction.get_text(documents[i])
             if validate(documents[i], parsed_query_dic,True):
                 # print("Pass validation")
-                email = list(set(extraction.email_recognition(documents[i],True)))
-                phone = list(set(extraction.phone_recognition(documents[i],True)))
+                email = list(set(extraction.email_recognition(documents[i],True,False)))
+                phone = list(set(extraction.phone_recognition(documents[i],True,False)))
                 #address = list(set(extraction.address_recognition(documents[i],True)))
                 dic[adID] = {}
                 dic[adID]["email"] = email
