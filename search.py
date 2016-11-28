@@ -4,243 +4,250 @@ from elasticsearch import Elasticsearch
 import extraction
 
 def query_retrival(query_path): #parse the json query file into a list of queries
+    f = open(query_path)
+    query_list = json.load(f,strict = False)
+    f.close()
+    return query_list
     # f = open(query_path)
-    # query_list = json.load(f,strict = False)
+    # lines = f.readlines()
     # f.close()
+    # queries = yaml.load("".join(line.strip("\n") for line in lines))
+    # query_list = []
+    # for query_type in queries:
+    #     for query_id in queries[query_type]:
+    #         query = queries[query_type][query_id]["parsed"].copy()
+    #         query["type"] = query_type.lower()
+    #         query["id"] = query_id
+    #         query_list.append(query)
     # return query_list
-	f = open(query_path)
-	lines = f.readlines()
-	f.close()
-	queries = yaml.load("".join(line.strip("\n") for line in lines))
-	query_list = []
-	for query_type in queries:
-		for query_id in queries[query_type]:
-			query = queries[query_type][query_id]["parsed"].copy()
-			query["type"] = query_type.lower()
-			query["id"] = query_id
-			query_list.append(query)
-	return query_list
 
-def query_parse(query):
+# def query_parse(query):
+#     skin_color_list = ["white","yellow","black"]
+#     search_ignore_list = ["obfuscation","multiple_providers","gender"]
+#     where = query["where"]
+#     clauses = where["clauses"]
+#     filters = {}
+#     if "filters" in where:
+#         filters = where["filters"]
+#     parsed_dic = {} #Dictory to store the parsed query
+#     must_search_field = {} #Correspond to the must field in ElasticSearch Query
+#     should_search_field = {} #Correspond to the should field in ElasticSearch Query
+#     must_not_field = {} #Correspond to the must not field in ElasticSearch Query
+#     required_match_field = {} #Validation fields after document retrieval
+#     optional_match_field = {} #Optional fields after document retrieval
+#     answer_field = {}
+#     for clause in clauses:
+#         predicate = re.sub("[^\w]","",clause["predicate"])
+#         if "constraint" in clause:  #constraint indicates given condition
+#             if predicate in search_ignore_list:
+#                 pass
+#             elif predicate == "ethnicity":
+#                 if clause["constraint"] in skin_color_list:
+#                     should_search_field["ethnicity"] = clause["constraint"]
+#                 else:
+#                     must_search_field["ethnicity"] = clause["constraint"]
+#             # elif predicate == "drug_use":
+#             #     should_search_field["drug_use"] = "drug"
+#             elif predicate == "location": #location = city,state(which is not necesary
+#                 location = clause["constraint"].split(",")
+#                 if location:
+#                     should_search_field["location"] = clause["constraint"]
+#                     if len(location)>1:
+#                         if location[1].lower().capitalize() in extraction.nationality_list:
+#                             country = location[1]
+#                             if location[1].lower() == "thailand":
+#                                 country = "thai"
+#                             must_search_field["location"] = location[0]+" AND "+country
+#                         else:
+#                             must_search_field["location"] = location[0]
+#                     else:
+#                         must_search_field["location"] = location[0]
+#             elif predicate == "seed":
+#                 if "@" in clause["constraint"]:
+#                     must_search_field["email"] = clause["constraint"]
+#                     required_match_field["email"] = clause["constraint"]
+#                 elif clause["constraint"].isdigit():
+#                     must_search_field["phone"] = clause["constraint"]
+#                     required_match_field["phone"] = clause["constraint"]
+#                 else:
+#                     required_match_field["street_address"] = clause["constraint"]
+#                 continue
+#             else:
+#                 must_search_field[predicate] = clause["constraint"]
+#             if predicate != "seed":
+#                 required_match_field[predicate] = clause["constraint"]
+#         else:
+#             if clause["isOptional"]:
+#                 optional_match_field[predicate] = clause["variable"]
+#             else:
+#                 if predicate == "ad":
+#                     pass
+#                 else:
+#                     if predicate == "hair_color":
+#                         must_search_field[predicate] = "hair"
+#                     if predicate == "eye_color":
+#                         must_search_field[predicate] = "hair"
+#                     if predicate == "ethnicity": #Add "ethinitity" to should search field to get relavant documents ahead in the result.
+#                         should_search_field[predicate] = "ethnicity"
+#                     if predicate == "review_site":
+#                         should_search_field[predicate] = "review"
+#                     answer_field[predicate] = clause["variable"]
+#     #filters
+#     if filters:
+#         for filter in filters:
+#             filter_dic = {}
+#             operator = ""
+#             if "operator" in filter:
+#                 operator = filter["operator"][0].upper()
+#             for clause in filter["clauses"]:
+#                 if "variable" in clause:
+#                     if clause["variable"] in filter_dic:
+#                         filter_dic[clause["variable"]]["content"] += " "+operator+" "+re.sub("[^\w\s]","",clause["constraint"])
+#                     else:
+#                         filter_dic[clause["variable"]] = {}
+#                         filter_dic[clause["variable"]]["operator"] = clause["operator"]
+#                         filter_dic[clause["variable"]]["content"] = re.sub("[^\w\s]","",clause["constraint"])
+#                 else: #image case,ignore for now
+#                     pass
+#             for variable in filter_dic:
+#                 for key,value in answer_field.items():
+#                     if value == variable:
+#                         if filter_dic[variable]["operator"] == "!=":
+#                             must_not_field[key] = filter_dic[variable]["content"]
+#                         elif filter_dic[variable]["operator"] == "=":
+#                             del answer_field[key]
+#                             must_search_field[key] = filter_dic[variable]["content"]
+#                             required_match_field[key] = filter_dic[variable]["content"].split(operator)
+#     parsed_dic["must_search_field"] = must_search_field
+#     parsed_dic["should_search_field"] = should_search_field
+#     parsed_dic["must_not_field"] = must_not_field
+#     parsed_dic["required_match_field"] = required_match_field
+#     parsed_dic["optional_match_field"] = optional_match_field
+#     parsed_dic["answer_field"] = answer_field
+#     return parsed_dic
+
+def query_parse(query):  # input query - json
     skin_color_list = ["white","yellow","black"]
-    search_ignore_list = ["obfuscation","multiple_providers","gender"]
-    where = query["where"]
-    clauses = where["clauses"]
-    filters = {}
-    if "filters" in where:
-        filters = where["filters"]
-    parsed_dic = {} #Dictory to store the parsed query
-    must_search_field = {} #Correspond to the must field in ElasticSearch Query
-    should_search_field = {} #Correspond to the should field in ElasticSearch Query
-    must_not_field = {} #Correspond to the must not field in ElasticSearch Query
-    required_match_field = {} #Validation fields after document retrieval
-    optional_match_field = {} #Optional fields after document retrieval
-    answer_field = {}
-    for clause in clauses:
-        predicate = re.sub("[^\w]","",clause["predicate"])
-        if "constraint" in clause:  #constraint indicates given condition
-            if predicate in search_ignore_list:
-                pass
-            elif predicate == "ethnicity":
-                if clause["constraint"] in skin_color_list:
-                    should_search_field["ethnicity"] = clause["constraint"]
-                else:
-                    must_search_field["ethnicity"] = clause["constraint"]
-            # elif predicate == "drug_use":
-            #     should_search_field["drug_use"] = "drug"
-            elif predicate == "location": #location = city,state(which is not necesary
-                location = clause["constraint"].split(",")
-                if location:
-                    should_search_field["location"] = clause["constraint"]
-                    if len(location)>1:
-                        if location[1].lower().capitalize() in extraction.nationality_list:
-                            country = location[1]
-                            if location[1].lower() == "thailand":
-                                country = "thai"
-                            must_search_field["location"] = location[0]+" AND "+country
+    # search_ignore_list = ["obfuscation","multiple_provider"] # No gender feature
+    query_id = query['id']
+    query_type = query['type']
+    sparql = query['SPARQL'][0]
+    lines = sparql.split('\n')
+    parsed_dic = {}
+    ans_field = {}
+    must_search = {}
+    should_search = {}
+    must_not_search = {}
+    must_match = {} #Validation fields after document retrieval
+    should_match = {} #Optional fields after document retrieval
+    group = {}
+    filter_condition = {}
+    for line in lines:
+        line = line.strip()
+        words = line.split(' ')
+        if line.startswith('PREFIX'):
+            continue
+        if line.startswith('SELECT'):
+            ans_field[words[1][1:]]	= words[1]
+        if line.startswith('qpr:'):
+            line = line[:-1].strip() #remove the punctuation at the end
+            words = line.split(" ",1)
+            if not words[1].startswith("?"): #Given conditions
+                words[1] = words[1][1:-1]
+                predicate = words[0][4:]
+                constraint = words[1]
+                # Need to refine search_ignore_list
+                # if predicate in search_ignore_list:
+                    # pass
+                if predicate == 'ethnicity':
+                    if constraint in skin_color_list:
+                        should_search['ethnicity'] = constraint
+                    else:
+                        must_search['ethnicity'] = constraint
+                    must_match[predicate] = constraint
+                # search directly
+                elif predicate == 'phone':
+                    should_search['phone'] = constraint
+                    must_match[predicate] = constraint
+                elif predicate == 'location':
+                    location = constraint.split(',')
+                    if location:
+                        should_search['location'] = constraint
+                        if len(location)>1:
+                            if location[1].lower().capitalize() in extraction.nationality_list:
+                                country = location[1]
+                                if location[1].lower() == 'thailand':
+                                    country = 'thai'
+                                    must_search['location'] = location[0]+' AND '+country
+                                else:
+                                    must_search['location'] = location[0]
                         else:
-                            must_search_field["location"] = location[0]
-                    else:
-                        must_search_field["location"] = location[0]
-            elif predicate == "seed":
-                if "@" in clause["constraint"]:
-                    must_search_field["email"] = clause["constraint"]
-                    required_match_field["email"] = clause["constraint"]
-                elif clause["constraint"].isdigit():
-                    must_search_field["phone"] = clause["constraint"]
-                    required_match_field["phone"] = clause["constraint"]
+                            must_search['location'] = location[0]
+                        must_match['location'] = constraint
+
+                # elif predicate = 'tatoos':
+                elif predicate == 'multiple_providers':
+                    should_search['multiple_providers'] = constraint
+                    must_match[predicate] = constraint
+                elif predicate == 'hair_color':
+                    should_search['hair_color'] = constraint
+                    must_match[predicate] = constraint
+                    must_search[predicate] = constraint
+                elif predicate == 'eye_color':
+                    should_search['eye_color'] = constraint
+                    must_match[predicate] = constraint
+                    must_search[predicate] = constraint
+                elif predicate == "height":
+                    he = re.findall("\d",constraint)
+                    if len(he) == 1:
+                        must_search["height"] = he[0]+"'"
+                        should_search["height"] = he[0]+"\""
+                    elif len(he) == 2:
+                        must_search["height"] = he[0]+"'"+he[1]+"\""
+                # cluster query
+                elif predicate == 'seed':
+                    if query["type"] in ["Mode","AVG","MAX","MIN"]:
+
+                    if "@" in constraint:
+                        must_search['email'] = constraint
+                        must_match['email'] = constraint
+                    elif constraint.isdigit():
+                        must_search['phone'] = constraint
+                        must_match['phone'] = constraint
                 else:
-                    required_match_field["street_address"] = clause["constraint"]
-                continue
-            else:
-                must_search_field[predicate] = clause["constraint"]
-            if predicate != "seed":
-                required_match_field[predicate] = clause["constraint"]
-        else:
-            if clause["isOptional"]:
-                optional_match_field[predicate] = clause["variable"]
-            else:
-                if predicate == "ad":
-                    pass
-                else:
-                    if predicate == "hair_color":
-                        must_search_field[predicate] = "hair"
-                    if predicate == "eye_color":
-                        must_search_field[predicate] = "hair"
-                    if predicate == "ethnicity": #Add "ethinitity" to should search field to get relavant documents ahead in the result.
-                        should_search_field[predicate] = "ethnicity"
-                    if predicate == "review_site":
-                        should_search_field[predicate] = "review"
-                    answer_field[predicate] = clause["variable"]
-    #filters
-    if filters:
-        for filter in filters:
-            filter_dic = {}
-            operator = ""
-            if "operator" in filter:
-                operator = filter["operator"][0].upper()
-            for clause in filter["clauses"]:
-                if "variable" in clause:
-                    if clause["variable"] in filter_dic:
-                        filter_dic[clause["variable"]]["content"] += " "+operator+" "+re.sub("[^\w\s]","",clause["constraint"])
-                    else:
-                        filter_dic[clause["variable"]] = {}
-                        filter_dic[clause["variable"]]["operator"] = clause["operator"]
-                        filter_dic[clause["variable"]]["content"] = re.sub("[^\w\s]","",clause["constraint"])
-                else: #image case,ignore for now
-                    pass
-            for variable in filter_dic:
-                for key,value in answer_field.items():
-                    if value == variable:
-                        if filter_dic[variable]["operator"] == "!=":
-                            must_not_field[key] = filter_dic[variable]["content"]
-                        elif filter_dic[variable]["operator"] == "=":
-                            del answer_field[key]
-                            must_search_field[key] = filter_dic[variable]["content"]
-                            required_match_field[key] = filter_dic[variable]["content"].split(operator)
-    parsed_dic["must_search_field"] = must_search_field
-    parsed_dic["should_search_field"] = should_search_field
-    parsed_dic["must_not_field"] = must_not_field
-    parsed_dic["required_match_field"] = required_match_field
-    parsed_dic["optional_match_field"] = optional_match_field
-    parsed_dic["answer_field"] = answer_field
+                    must_search[predicate] = constraint
+                    must_match[predicate] = constraint # email, street_address, social_media_id, review_site_id, age, price, services, height, weight, post_date
+
+
+        if line.startswith('GROUP BY'):
+            ans_pattern = '(?:\?)([a-z]+)'
+            for word in words:
+                group_variable = re.findall(ans_pattern, word)
+                group['group_by'] = group_variable
+        if line.startswith('ORDER BY'):
+            for word in words:
+                if 'DESC' in word:
+                    group['order_by'] = 'DESC'
+                elif 'ASEC' in word:
+                    group['order_by'] = 'ASEC'
+        if line.startswith("LIMIT"):
+            group["limit"] = int(line.split()[1])
+        if line.startswith("FILTER"):
+            filterPattern = "\".*?\""
+            filter_constraint = re.findall(filterPattern, line)
+            filter_condition['filter'] = filter_constraint
+
+
+    parsed_dic["type"] = query["type"]
+    parsed_dic['answer_field'] = ans_field
+    parsed_dic['must_search_field'] = must_search
+    parsed_dic['should_search_field'] = should_search
+    parsed_dic['must_not_field'] = must_not_search
+    parsed_dic['required_match_field'] = must_match
+    parsed_dic['optional_match_field'] = should_match
+    parsed_dic['group'] = group
+    parsed_dic['filter_condition'] = filter_condition
     return parsed_dic
-
-# def query_parse(query):  # input query - json
-# 	skin_color_list = ["white","yellow","black"]
-# 	# search_ignore_list = ["obfuscation","multiple_provider"] # No gender feature
-# 	query_id = query['id']
-# 	query_type = query['type']
-# 	sparql = query['SPARQL'][0]
-# 	lines = sparql.split('\n')
-# 	parsed_dic = {}
-# 	ans_field = {}
-# 	must_search = {}
-# 	should_search = {}
-# 	must_not_search = {}
-# 	must_match = {} #Validation fields after document retrieval
-# 	should_match = {} #Optional fields after document retrieval
-# 	group = {}
-#   filter_condition = {}
-# 	for line in lines:
-# 		line = line.strip()
-# 		words = line.split(' ')
-# 		if line.startswith('PREFIX'):
-# 			continue
-# 		if line.startswith('SELECT'):
-# 			ans_field[words[1][1:]]	= words[1]
-# 		if line.startswith('qpr:'):
-# 			line = line[:-1].strip() #remove the punctuation at the end
-# 			words = line.split(" ",1)
-# 			if not words[1].startswith("?"): #Given conditions
-# 				words[1] = words[1][1:-1]
-# 				predicate = words[0][4:]
-# 				constraint = words[1]
-# 				# Need to refine search_ignore_list
-# 				# if predicate in search_ignore_list:
-# 					# pass
-# 				if predicate == 'ethnicity':
-# 					if constraint in skin_color_list:
-# 						should_search['ethnicity'] = constraint
-# 					else:
-# 						must_search['ethnicity'] = constraint
-# 					must_match[predicate] = constraint
-# 				# search directly
-# 				elif predicate == 'phone':
-# 					should_search['phone'] = constraint
-# 					must_match[predicate] = constraint
-# 				elif predicate == 'location':
-# 					location = constraint.split(',')
-# 					if location:
-# 						should_search['location'] = constraint
-# 						if len(location)>1:
-# 							if location[1].lower().capitalize() in extraction.nationality_list:
-# 								country = location[1]
-# 								if location[1].lower() == 'thailand':
-# 									country = 'thai'
-# 									must_search['location'] = location[0]+' AND '+country
-# 								else:
-# 									must_search['location'] = location[0]
-# 						else:
-# 							must_search['location'] = location[0]
-# 						must_match['location'] = constraint
-#
-# 				# elif predicate = 'tatoos':
-# 				elif predicate == 'multiple_providers':
-# 					should_search['multiple_providers'] = constraint
-# 					must_match[predicate] = constraint
-# 				elif predicate == 'hair_color':
-# 					should_search['hair_color'] = constraint
-# 					must_match[predicate] = constraint
-# 					must_search[predicate] = constraint
-# 				elif predicate == 'eye_color':
-# 					should_search['eye_color'] = constraint
-# 					must_match[predicate] = constraint
-# 					must_search[predicate] = constraint
-# 				# cluster query
-# 				elif predicate == 'seed':
-# 					if "@" in constraint:
-# 						must_search['email'] = constraint
-# 						must_match['email'] = constraint
-# 					elif constraint.isdigit():
-# 						must_search['phone'] = constraint
-# 						must_match['phone'] = constraint
-# 					else:
-# 						must_match['physical_address'] = constraint
-# 				else:
-# 					must_search[predicate] = constraint
-# 					must_match[predicate] = constraint # email, street_address, social_media_id, review_site_id, age, price, services, height, weight, post_date
-#
-#
-# 		if line.startswith('GROUP BY'):
-# 			ans_pattern = '(?:\?)([a-z]+)'
-# 			for word in words:
-# 				group_variable = re.findall(ans_pattern, word)
-# 				group['group_by'] = group_variable
-# 		if line.startswith('ORDER BY'):
-# 			for word in words:
-# 				if 'DESC' in word:
-# 					group['order_by'] = 'DESC'
-# 				elif 'ASEC' in word:
-# 					group['order_by'] = 'ASEC'
-# 		if line.startswith("LIMIT"):
-# 			group["limit"] = int(line.split()[1])
-#       if line.startswith("FILTER"):
-            # filterPattern = "\".*?\""
-            # filter_constraint = re.findall(filterPattern, line)
-            # filter_condition['filter'] = filter_constraint
-
-#
-#
-# 	parsed_dic['answer_field'] = ans_field
-# 	parsed_dic['must_search_field'] = must_search
-# 	parsed_dic['should_search_field'] = should_search
-# 	parsed_dic['must_not_field'] = must_not_search
-# 	parsed_dic['required_match_field'] = must_match
-# 	parsed_dic['optional_match_field'] = should_match
-# 	parsed_dic['group'] = group
-#   parsed_dic['filter_condition'] = filter_condition
-# 	return parsed_dic
 
 
 def query_body_build(parsed_query):
@@ -300,6 +307,7 @@ def query_body_build(parsed_query):
         query_dic["match"] = {}
         query_dic["match"]["extracted_text"] = word
         should_arr.append(query_dic)
+    if parsed_query["type"] == "cluster":
     size = 3000
     body = {"size":size,"query":{"bool":{"must":{"match":{"extracted_text": must_str}}, "must_not":[{"match": {"extracted_text": must_not_str}},{"match": {"raw_content": must_not_str}}], "should": should_arr}}}
     return body

@@ -83,10 +83,13 @@ def phone_recognition(document,is_raw_content,is_position): #retrieve distinct p
     :return: List[str] containing all the distinct phone number in raw_content or extracted_text
     """
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     result = []
     number_pattern = r"(?:^|\D)([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3})[^A-Za-z0-9]{0,2}([0-9]{3,6})(?:\D|$)" #Mainly retrieve national phone numbers
     if is_position:
@@ -116,10 +119,13 @@ def phone_recognition(document,is_raw_content,is_position): #retrieve distinct p
 
 def email_recognition(document,is_raw_content,is_position):
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     regex = re.compile(("([a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`"
                     "{|}~-]+)*(@|\sat\s)(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(\.|"
                     "\sdot\s))+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)"))
@@ -148,10 +154,13 @@ def email_recognition(document,is_raw_content,is_position):
 
 def address_recognition(document,is_raw_content,is_position):
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     text_without_quotation = re.sub(r'[^\w\s]','',text)
     streetNumber = "([1-9][0-9]{1,3} )"
     nsew = "(((N|S|E|W|North|South|East|West|NW|NE|SW|SE) )?)"
@@ -195,11 +204,14 @@ def social_media_id_recognition(document,is_raw_content,is_position):
     """
     social_media_list = ["facebook","instagram","twitter"]
     text = ""
-    result = []
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
+    result = []
     media_str = "|".join(social_media_list)
     #extract social media ID in a url
     url_media_pattern = r"(%s).com/(.*)/"%media_str
@@ -222,13 +234,16 @@ def social_media_id_recognition(document,is_raw_content,is_position):
     return result
 
 
-def review_site_recognition(document,is_raw_content,is_position):
+def review_site_id_recognition(document,is_raw_content,is_position):
     #url_pattern = re.compile(r'(http[s]?://)|(www.)(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     review_site_list = ["eccie", "TER", "preferred411"]
     review_site = []
     hyperlinks = hyperlink_recognition(document,is_raw_content,is_position)
@@ -305,10 +320,13 @@ def location_recognition(document,is_raw_content,is_position):
 
 def age_recognition(document,is_raw_content,is_position):
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     age_pattern = r"(?:^|\D)([1-6]\d)(?:\D|$)"
     words = re.sub(r'[^\w\s]',' ',text).split()
     result = []
@@ -387,10 +405,13 @@ def age_recognition(document,is_raw_content,is_position):
 
 def nationality_recognition(document,is_raw_content,is_position):
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     nationality_filepath = "./resource/nationality"
     with open(nationality_filepath) as f:
         nationality_list = ','.join(f.readlines()).split(",")
@@ -410,10 +431,13 @@ def nationality_recognition(document,is_raw_content,is_position):
 
 def ethnicity_recognition(document,is_raw_content,is_position):
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     nationality_filepath = "./resource/nationality"
     ethnicity_arr = ["caucasian", "hispanic", "asian", "african american", "caribbean", "pacific islander", "middle eastern", "biracial" , "south asian", "native american"]
     result = []
@@ -440,10 +464,13 @@ def ethnicity_recognition(document,is_raw_content,is_position):
 
 def price_recognition(document,is_raw_content,is_position):
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     price1 = "(\d+,)?(\d+\.)?\d+"
     # price2 = "(^(\$|€|¥|£|$|Fr|¥|kr|Ꝑ|ք|₩|R|(R$)|₺|₹)\d+)"
     price2 = "((\$|€|¥|£|Fr|kr|Ꝑ)\d+)"
@@ -531,10 +558,13 @@ def price_recognition(document,is_raw_content,is_position):
 
 def hair_color_recognition(document,is_raw_content,is_position):
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     if not text:
         return []
     normalized_color = ["blonde", "brown", "black", "red", "auburn", "chestnut", "gray", "white","dark"]
@@ -595,10 +625,13 @@ def hair_color_recognition(document,is_raw_content,is_position):
 
 def eye_color_recognition(document,is_raw_content,is_position):
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     if not text:
         return []
     normalized_color = ["blue", "brown", "green", "hazel", "gray", "amber"]
@@ -662,11 +695,13 @@ def services_recognition(document,is_raw_content,is_position):
     :param is_raw_content: Boolean
     :return: List[str] containing all distinct service that is in the document as well as in the local service list
     """
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     result = []
     text = text.lower()
     for service in service_list:
@@ -683,7 +718,22 @@ def tattoos_recognition(document,is_raw_content,is_position):
     return []
 
 def multi_providers(document,is_raw_content,is_position):
-    return number_of_individuals_recognition(document,is_raw_content,is_position)
+    text = ""
+    if "TLD" in document:
+        text = document["TLD"]
+    else:
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+
+            text = get_text(document)
+    if "twin" in text:
+        return [2]
+    text = text.lower()
+    two_providers_list = ["my friend","my sister","and me"]
+    for words in two_providers_list:
+        if words in text:
+            return [2]
 
 def height_recognition(document,is_raw_content,is_position):
     """
@@ -692,11 +742,13 @@ def height_recognition(document,is_raw_content,is_position):
     :param is_position: Bool
     :return: list[int] in cm unit
     """
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     #inch pattern
     inch_pattern = r"(?:^|\W)([3-9])'[ ]?([0-9])?(?:\")?"
     inch_pattern_result = re.findall(inch_pattern,text)
@@ -730,11 +782,13 @@ def weight_recognition(document,is_raw_content,is_position):
     :param is_position: Bool
     :return: list[int]: in lbs unit
     """
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     weight_pattern = r"(?:^|\D)([\d]{2,3})[^A-Za-z0-9]?(?i)(kg|lb)"
     weight_pattern_result = re.findall(weight_pattern,text)
     result = []
@@ -752,34 +806,16 @@ def weight_recognition(document,is_raw_content,is_position):
                 result.append(item[0])
     return result
 
-#############################################################################
-
-def organization_recognition(document,is_raw_content):
-    # text = ""
-    # if is_raw_content:
-    #     text = get_raw_content(document)
-    # else:
-    #     text = get_text(document)
-    annotated_text = ""
-    if is_raw_content:
-        annotated_text = document["annotated_raw_content"]
-    else:
-        annotated_text = document["annotated_clean_content"]
-    organization_pattern = re.compile(r"\<ORGANIZATION\>(.*?)\</ORGANIZATION>")
-    organization_pattern_result = re.findall(organization_pattern,annotated_text)
-    result = []
-    if len(organization_pattern_result)>0:
-        for item in organization_pattern_result:
-            result.append(result_normalize(item))
-    return result
-
 #return all the extracted dates in dictioanry format -- date_dic = {day:int month:int year: int}, if date is not exact(more than a week ago), use an interval(int_low,int_high) instead
 def posting_date_recognition(document,is_raw_content,is_position):
     text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
+    if "TLD" in document:
+        text = document["TLD"]
     else:
-        text = get_text(document)
+        if is_raw_content:
+            text = get_raw_content(document)
+        else:
+            text = get_text(document)
     #digit date pattern like 8/7/2000, 2000/7/8
     month = r"((?:0?[1-9])|(?:1[0-2]))"
     day = r"((?:0?[1-9])|(?:[12][0-9])|(?:[3][01]))"
@@ -837,7 +873,7 @@ def posting_date_recognition(document,is_raw_content,is_position):
                 result.append((0.5,date_str))
             else:
                 result.append(date)
-            
+
     #relative date pattern like 10 months ago, more than a week a ago
     # number_str = r"((?i)(?:[1-3]?[0-9])|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)"
     # number_dic = {"a":1,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10,"eleven":11,"twelve":12,"thirteen":13,"fourteen":14,"fifteen":15,"sixteen":16,"seventeen":17,"eighteen":18,"nineteen":19,"twenty":20}
@@ -899,7 +935,58 @@ def posting_date_recognition(document,is_raw_content,is_position):
     #     result.append(dic)
     return result
 
+def top_level_domain_pattern(document):
+    path = "TLD_list.txt"
+    parentUrl = document["_source"]["url"]
+    findTLD = False
+    result = []
+    with open(path) as inputFile:
+        TLDs = inputFile.readlines()
+        for TLD in TLDs:
+            TLD = TLD.strip("\n")
+            if parentUrl.find(TLD) != -1:
+                findTLD = True
+                result.append(TLD)
+                break
+            else:
+                continue
+    return result
 
+def top_level_domain_recognition(document):
+    parentUrl = document["_source"]["url"]
+    result = []
+    if parentUrl.startswith("http://"):
+        url = parentUrl[len("http://"):]
+    elif parentUrl.startswith("https://"):
+        url = parentUrl[len("https://")]
+    else:
+        url = parentUrl
+    url = url[:url.find("/")]
+    url_parts = url.split(".")
+    TLD = url_parts[-2] + "." + url_parts[-1]
+    result.append(TLD)
+    return result
+
+#############################################################################
+
+def organization_recognition(document,is_raw_content):
+    # text = ""
+    # if is_raw_content:
+    #     text = get_raw_content(document)
+    # else:
+    #     text = get_text(document)
+    annotated_text = ""
+    if is_raw_content:
+        annotated_text = document["annotated_raw_content"]
+    else:
+        annotated_text = document["annotated_clean_content"]
+    organization_pattern = re.compile(r"\<ORGANIZATION\>(.*?)\</ORGANIZATION>")
+    organization_pattern_result = re.findall(organization_pattern,annotated_text)
+    result = []
+    if len(organization_pattern_result)>0:
+        for item in organization_pattern_result:
+            result.append(result_normalize(item))
+    return result
 
 def gender_recognition(document,is_raw_content):
     text = ""
@@ -925,36 +1012,6 @@ def gender_recognition(document,is_raw_content):
                 result.append(word)
     return result
 
-
-def number_of_individuals_recognition(document,is_raw_content,is_position):
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
-    else:
-        text = get_text(document)
-    if "twin" in text:
-        return [2]
-    names = name_recognition(document,is_raw_content,is_position)
-    for i in range(len(names)):
-        names[i] = result_normalize(names[i])
-    names = list(set(names))
-    eye_colors = eye_color_recognition(document,is_raw_content,is_position)
-    hair_colors = hair_color_recognition(document,is_raw_content,is_position)
-    ages = age_recognition(document,is_raw_content,is_position)
-    nationalities = nationality_recognition(document,is_raw_content,is_position)
-    ethnicities = ethnicity_recognition(document,is_raw_content,is_position)
-    number_list = [names,eye_colors,hair_colors,ages,nationalities,ethnicities]
-    #print(number_list)
-    number_list.sort(key=lambda k:len(k))
-    result = 0
-    for item in number_list:
-        if len(item) >0:
-            result = len(item)
-            break
-    if result == 0:
-        return [1]
-    else:
-        return [result]
 
 def review_id_recognition(document,is_raw_content):
     url = document["_source"]["cleaned_url"] + "/"      # Add a non-num and non-alph character in case review id is right at the end of url
@@ -1050,77 +1107,6 @@ def drug_use_recognition(document,is_raw_content):
                     result.append("true")
     return result
 
-def multiple_phone_recognition(document,is_raw_content):
-    result = phone_recognition(document,is_raw_content)
-    return list(set(result))
-
-def top_level_domain_pattern(document,is_raw_conent):
-    path = "/Users/Sharon/Desktop/georgetown/2016_Summer_CP4_GU/TLD_list.txt"
-    parentUrl = document["_source"]["url"]
-    findTLD = False
-    result = []
-    with open(path) as inputFile:
-        TLDs = inputFile.readlines()
-        for TLD in TLDs:
-            TLD = TLD.strip("\n")
-            if parentUrl.find(TLD) != -1:
-                findTLD = True
-                result.append(TLD)
-                break
-            else:
-                continue
-    return result
-
-def top_level_domain_recognition(document,is_raw_conent):
-    parentUrl = document["_source"]["url"]
-    result = []
-	if parentUrl.startswith("http://"):
-		url = parentUrl[len("http://"):]
-	elif parentUrl.startswith("https://"):
-		url = parentUrl[len("https://")]
-	else:
-		url = parentUrl
-	url = url[:url.find("/")]
-	url_parts = url.split(".")
-	TLD = url_parts[-2] + "." + url_parts[-1]
-	result.append(TLD)
-    return result
-
-def image_with_phone_recognition(document):
-    return []
-
-def image_with_email_recognition(document):
-    return []
-
-def obfuscation_recognition(document):
-    return []
-
-def image_with_review_id_recognition(document):
-    return []
-
-def image_with_tattoo_recognition(document):
-    return []
-
-def image_in_hotel_motel_room_recognition(document):
-    return []
-
-def image_without_professional_lighting_recognition(document):
-    return []
-
-def color_recognition(document,is_raw_content):
-    text = ""
-    if is_raw_content:
-        text = get_raw_content(document)
-    else:
-        text = get_text(document)
-    color_dic = webcolors.CSS3_NAMES_TO_HEX
-    text_without_quotation = re.sub(r'[^\w\s]',' ',text)
-    words = text_without_quotation.split()
-    result = {}
-    for i in range(len(words)):
-        if words[i].lower() in color_dic:
-            result[i] = words[i]
-    return result
 
 ################################################
 #Feature Functions Determining The correct Value
@@ -1151,7 +1137,7 @@ if __name__ != "__main__":
     global functionDic
     functionDic = {"post_date":posting_date_recognition,"tattoos":tattoos_recognition,"street_address": address_recognition,"age":age_recognition,
                    "name":name_recognition, "hair_color":hair_color_recognition,"eye_color":eye_color_recognition,"nationality":nationality_recognition,
-                   "ethnicity":ethnicity_recognition,"review_site":review_site_recognition,"email": email_recognition,"phone": phone_recognition,
+                   "ethnicity":ethnicity_recognition,"review_site_id":review_site_id_recognition,"email": email_recognition,"phone": phone_recognition,
                    "location":location_recognition,"price":price_recognition,"multiple_providers": number_of_individuals_recognition,
                     "social_media_id":social_media_id_recognition,"services":services_recognition,"height":height_recognition,"weight":weight_recognition
                    }

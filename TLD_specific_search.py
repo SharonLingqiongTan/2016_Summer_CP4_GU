@@ -37,7 +37,7 @@ def TLD_specific_search(document, is_raw_content):
 
 		return str(content)	
 	else:
-			return None
+			return ""
 
 path = "/Users/Sharon/Desktop/bs_test.txt"
 f = open(path)
