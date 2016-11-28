@@ -3,12 +3,12 @@
 		"id": "1",
 		"type":"pointfact",
 		"question":"haha",
-		"SPARQL":["PREFIX qpr:<http://istresearch.com/qpr>\nSELECT ?email ?ad\nWHERE\n{    	?ad a qpr:Ad ;\nqpr:phone '9495329903' ;\nqpr:weight '125 lbs' ;\nqpr:ethnicity 'Caucasian' ;\nqpr:eye_color 'blue' ;\nqpr:hair_color 'blonde' ;\nqpr:age '24' ; \nqpr:location 'Boston' ;\nqpr:email ?email .  \n}"]
+		"SPARQL":["PREFIX qpr:<http://istresearch.com/qpr>\nSELECT ?email ?ad\nWHERE\n{\t?ad a qpr:Ad ;\n\tqpr:phone '9495329903' ;\n\tqpr:weight '125 lbs' ;\n\tqpr:ethnicity 'Caucasian' ;\n\tqpr:eye_color 'blue' ;\n\tqpr:hair_color 'blonde' ;\n\tqpr:age '24' ; \n\tqpr:location 'Boston' ;\n\tqpr:email ?email .  \n}"]
 	},
 	{
 		"id": "2",
 		"type":"pointfact",
 		"question":"haha",
-		"SPARQL":["PREFIX qpr:<http://istresearch.com/qpr>\nSELECT ?name ?ad\nWHERE\n{    	?ad a qpr:Ad ;\nqpr:ethnicity 'Caucasian' ;\nqpr:age '34' ;\nqpr:height '5\"5' ;\nqpr:location 'New Orleans' ;\nqpr:name ?name .\n}"]
+		"SPARQL":["PREFIX qpr:<http://istresearch.com/qpr>\nSELECT ?name ?ad\nWHERE\n{\t?ad a qpr:Ad ;\n\tqpr:ethnicity 'Caucasian' ;\n\tqpr:age '34' ;\n\tqpr:height '5\"5' ;\n\tqpr:location 'New Orleans' ;\n\tqpr:name ?name .\n}"]
 	}
 ]

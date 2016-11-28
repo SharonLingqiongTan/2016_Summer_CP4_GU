@@ -141,6 +141,7 @@ def query_parse(query):
 # 	must_match = {} #Validation fields after document retrieval
 # 	should_match = {} #Optional fields after document retrieval
 # 	group = {}
+#   filter_condition = {}
 # 	for line in lines:
 # 		line = line.strip()
 # 		words = line.split(' ')
@@ -224,6 +225,12 @@ def query_parse(query):
 # 					group['order_by'] = 'ASEC'
 # 		if line.startswith("LIMIT"):
 # 			group["limit"] = int(line.split()[1])
+#       if line.startswith("FILTER"):
+            # filterPattern = "\".*?\""
+            # filter_constraint = re.findall(filterPattern, line)
+            # filter_condition['filter'] = filter_constraint
+
+#
 #
 # 	parsed_dic['answer_field'] = ans_field
 # 	parsed_dic['must_search_field'] = must_search
@@ -232,6 +239,7 @@ def query_parse(query):
 # 	parsed_dic['required_match_field'] = must_match
 # 	parsed_dic['optional_match_field'] = should_match
 # 	parsed_dic['group'] = group
+#   parsed_dic['filter_condition'] = filter_condition
 # 	return parsed_dic
 
 
@@ -277,7 +285,7 @@ def query_body_build(parsed_query):
     for condition in should_search_dic:
         should_list.append(should_search_dic[condition])
 
-    feature_should_search_map = {"tattoos":"tattoo","name":"name","streeet_address":"address","age":"age","hair_color":"hair","eye_color":"eye","nationality":"nationality","ethnicity":"ethnicity","review_site":"review","email":"email","phone":"phone","location":"location","price":"","multiple_providers":"","social_media_id":"","services":"","height":"height","weight":"weight","post_date":"posted"}
+    feature_should_search_map = {"tattoos":"tattoo","name":"name","street_address":"address","age":"age","hair_color":"hair","eye_color":"eye","nationality":"nationality","ethnicity":"ethnicity","review_site_id":"review","email":"email","phone":"phone","location":"location","price":"","multiple_providers":"","social_media_id":"","services":"","height":"height","weight":"weight","post_date":"posted"}
     for field in answer_field:
         if feature_should_search_map[field]:
             should_list.append(feature_should_search_map[field])

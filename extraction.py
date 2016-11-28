@@ -1033,8 +1033,8 @@ def multiple_phone_recognition(document,is_raw_content):
     return list(set(result))
 
 def top_level_domain_recognition(document,is_raw_conent):
-    path = "resource/Seed_TLDs_7.15.2016.txt"
-    parentUrl = document["_source"]["cleaned_url"]
+    path = "/Users/Sharon/Desktop/georgetown/2016_Summer_CP4_GU/TLD_list.txt"
+    parentUrl = document["_source"]["url"]
     findTLD = False
     result = []
     with open(path) as inputFile:
@@ -1047,17 +1047,17 @@ def top_level_domain_recognition(document,is_raw_conent):
                 break
             else:
                 continue
-        if findTLD == False:
-            if parentUrl.startswith("http://"):
-                url = parentUrl[len("http://"):]
-            elif parentUrl.startswith("https://"):
-                url = parentUrl[len("https://")]
-            else:
-                url = parentUrl
-            url = url[:url.find("/")]
-            url_parts = url.split(".")
-            TLD = url_parts[-2] + "." + url_parts[-1]
-            result.append(TLD)
+        # if findTLD == False:
+        #     if parentUrl.startswith("http://"):
+        #         url = parentUrl[len("http://"):]
+        #     elif parentUrl.startswith("https://"):
+        #         url = parentUrl[len("https://")]
+        #     else:
+        #         url = parentUrl
+        #     url = url[:url.find("/")]
+        #     url_parts = url.split(".")
+        #     TLD = url_parts[-2] + "." + url_parts[-1]
+        #     result.append(TLD)
     return result
 
 def image_with_phone_recognition(document):
