@@ -547,12 +547,18 @@ def price_recognition(document,is_raw_content,is_position):
         else:
             if price != "":
                 price = price.strip(" ")
-                ans += price,
+                if is_position:
+                    ans += (key/len(split),price),
+                else:
+                    ans += price,
                 price = priceDict[key]
         prevKey = key
     if price != "":
         price = price.strip(" ")
-        ans += price,
+        if is_position:
+            ans += (prevKey/len(split),price),
+        else:
+            ans += price,
     # return(priceDict)
     return(ans)
 

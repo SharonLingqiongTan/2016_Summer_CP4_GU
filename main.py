@@ -13,19 +13,24 @@ import certifi
 def main():
     reload(sys)
     sys.setdefaultencoding("utf-8")
-    query_path = "spql_self_built_query.json"
+    query_path = "post_point_fact.json"
     answer_path = "answer.json"
     query_list = search.query_retrival(query_path)
+    f = open("parsed_queries","w")
+    for query in query_list:
+        parsed_dic = search.query_parse(query)
+        json.dump(parsed_dic,f)
+        f.write("\n")
     # aggregate = filter(lambda k:k["type"] == "aggregate",query_list)
     # aggregate = filter(lambda k:k["id"] == "1223.11",aggregate)
     #global db
     # pool = Pool()
     # pool.map(pipeline,aggregate)
-    result = []
-    for query in query_list:
-        result.append(pipeline(query,False))
-    f = open(answer_path,"w")
-    json.dump(result,f)
+    # result = []
+    # for query in query_list:
+    #     result.append(pipeline(query,False))
+    # f = open(answer_path,"w")
+    # json.dump(result,f)
 
 def createIndex(index,type,es,doc):
     malpath = "mal.json"
@@ -353,9 +358,10 @@ def generate_formal_answer(query,result):
     else:
         for item in result:
             document_id = item["id"]
-            answer_text = item["answer"][0][0]
-            score  = (1-item["answer"][0][1])*item["validation_score"]
-            candidates.append((answer_text,document_id,score))
+            for candi in item["answer"]:
+                answer_text = candi[0]
+                score  = (1-item["answer"][0][1])*item["validation_score"]
+                candidates.append((answer_text,document_id,score))
         candidates.sort(key = lambda k:k[2],reverse = True)
         type_value = []
         threhold = 0.5

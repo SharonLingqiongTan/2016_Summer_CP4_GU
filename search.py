@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import certifi,os,yaml,sys,re,json
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch,RequestsHttpConnection
 import extraction
 
 def query_retrival(query_path): #parse the json query file into a list of queries
     f = open(query_path)
-    query_list = json.load(f,strict = False)
+    lines = f.readlines()
+    query_list = []
+    for line in lines:
+        query_list.append(json.loads(line,strict = False))
     f.close()
     return query_list
     # f = open(query_path)
@@ -148,7 +151,12 @@ def query_parse(query):  # input query - json
         if line.startswith('PREFIX'):
             continue
         if line.startswith('SELECT'):
-            ans_field[words[1][1:]]	= words[1]
+            pattern = "\?([A-Za-z]+)"
+            fields = re.findall(pattern,line)
+            if len(fields) == 2:
+                for item in fields:
+                    if item != "ad":
+                        ans_field[item]	= "?"+item
         if line.startswith('qpr:'):
             line = line[:-1].strip() #remove the punctuation at the end
             words = line.split(" ",1)
@@ -234,8 +242,10 @@ def query_parse(query):  # input query - json
         if line.startswith("LIMIT"):
             group["limit"] = int(line.split()[1])
         if line.startswith("FILTER"):
-            filterPattern = "\".*?\""
+            filterPattern = "'(.*?)'"
             filter_constraint = re.findall(filterPattern, line)
+            if filter_constraint:
+                filter_constraint = filter_constraint[0]
             if "content" in line:
                 must_search["content"] = filter_constraint
             elif "title" in line:
@@ -317,14 +327,15 @@ def query_body_build(parsed_query):
     return body
 
 def elastic_search(query_body):
-    es = Elasticsearch(
-        ['https://cdr-es.istresearch.com:9200/memex-qpr-cp4-2'],
-        http_auth=('cdr-memex', '5OaYUNBhjO68O7Pn'),
-        port=9200,
-        use_ssl=True,
-        verify_certs = True,
-        ca_certs=certifi.where(),
-    )
+    # es = Elasticsearch(
+    #     ['https://cdr-es.istresearch.com:9200/memex-qpr-cp4-2'],
+    #     http_auth=('cdr-memex', '5OaYUNBhjO68O7Pn'),
+    #     port=9200,
+    #     use_ssl=True,
+    #     verify_certs = True,
+    #     ca_certs=certifi.where(),
+    # )
+    es = Elasticsearch(hosts = [{"host":'search-memex-7kthxwtfdr3yvzrdpjlcwordou.us-east-1.es.amazonaws.com',"port":80}],connection_class= RequestsHttpConnection)
     #es = Elasticsearch()
     response = es.search(body=query_body,request_timeout=60)
     documents = response["hits"]["hits"]
