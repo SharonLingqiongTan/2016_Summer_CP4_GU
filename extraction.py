@@ -311,7 +311,7 @@ def location_recognition(document,is_raw_content,is_position):
         #         result.append(i)
     if is_position:
         for item in re.finditer(location_pattern,annotated_text):
-            result.append(item.start()*1.0/len(annotated_text),"".join(item.groups()))
+            result.append((item.start()*1.0/len(annotated_text),"".join(item.groups())))
     else:
         for location in location_arr:
             result.append(result_normalize(location))
@@ -838,18 +838,29 @@ def posting_date_recognition(document,is_raw_content,is_position):
         dic = {}
         if len(item[0])>0:
             dic["month"] = item[1]
+            if len(item[1]) == 1:
+                dic["month"] = "0"+item[1]
             dic["day"] = item[2]
+            if len(item[2]) == 1:
+                dic["day"] = "0"+item[2]
             dic["year"] = item[3]
         elif len(item[4])>0:
             dic["day"] = item[5]
+            if len(item[5]) == 1:
+                dic["day"] = "0"+item[5]
             dic["month"] = item[6]
+            if len(item[6]) == 1:
+                dic["month"] = "0"+item[6]
             dic["year"] = item[7]
         elif len(item[8])>0:
             dic["year"] = item[9]
-            dic["month"] = item[10]
+            if len(item[10]) == 1:
+                dic["month"] = "0"+item[10]
             dic["day"] = item[11]
+            if len(item[11]) == 1:
+                dic["day"] = "0"+item[11]
         if len(dic)>0:
-            date_str = digit_month[dic["month"]]+" "+dic["day"]+", "+ dic["year"]
+            date_str = dic["year"]+"-"+dic["month"]+"-"+dic["day"]
             if is_position:
                 result.append((0.5,date_str))
             else:
@@ -862,19 +873,23 @@ def posting_date_recognition(document,is_raw_content,is_position):
     day_month_pattern = "("+day_str+r"[^A-Za-z0-9]"+month_str+r"[^A-Za-z0-9]{1,2}"+year+"(?:[^A-Za-z0-9])"+")"
     str_date_pattern = month_day_pattern+"|"+day_month_pattern
     str_date_pattern_result = re.findall(str_date_pattern,text)
-    month_dic = {"jan":1,"january":1, "feb": 2, "february": 2, "mar": 3, "march": 3, "apr": 4, "april": 4, "may": 5, "june": 6, "jun": 6, "july": 7, "jul": 7, "august": 8, "aug": 8, "september": 9, "sep": 9, "october": 10, "oct": 10, "november": 11, "nov": 11, "december": 12, "dec": 12}
+    month_dic = {"jan":"01","january":"01", "feb": "02", "february": "02", "mar": "03", "march": "03", "apr": "04", "april": "04", "may": "05", "june": "06", "jun": "06", "july": "07", "jul": "07", "august": "08", "aug": "08", "september": "09", "sep": "09", "october": "10", "oct": "10", "november": "11", "nov": "11", "december": "12", "dec": "12"}
     for item in str_date_pattern_result:
         dic = {}
         if item[0]:
             dic["month"] = item[1]
             dic["day"] = re.sub("[A-Za-z]","",item[2])
+            if len(dic["day"]) == 1:
+                dic["day"] = "0"+dic["day"]
             dic["year"] = item[3]
         else:
             dic["month"] = month_dic[item[6].lower()]
             dic["day"] = re.sub("[A-Za-z]","",item[5])
+            if len(dic["day"]) == 1:
+                dic["day"] = "0"+dic["day"]
             dic["year"] = item[7]
         if len(dic)>0:
-            date_str = dic["day"]+" "+dic["month"].capitalize()+", "+dic["year"]
+            date_str = dic["year"]+"-"+dic["month"]+"-"+dic["day"]
             if is_position:
                 result.append((0.5,date_str))
             else:

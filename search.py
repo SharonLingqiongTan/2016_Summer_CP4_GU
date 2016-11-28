@@ -181,13 +181,15 @@ def query_parse(query):  # input query - json
                     words = query["question"].split()
                     if "number" in words:
                         number_index = words.index("number")+1
+                        #print(words)
                         if number_index < len(words) and re.findall("\d",words[number_index]):
                             phone = ""
                             while len(re.findall("\d",phone))<8:
                                 phone += words[number_index]+" "
                                 number_index += 1
-                            must_search["phone"] = re.sub(r"[^\d\(\)-\+ ]","",phone.strip())
-                            must_match["phone"] = re.sub(r"[^\d\(\)-\+ ]","",phone.strip())
+                            print(phone)
+                            must_search["phone"] = re.sub(r"[^\d\(\)\-\+ ]","",phone.strip())
+                            must_match["phone"] = re.sub(r"[^\d\(\)\-\+ ]","",phone.strip())
                         else:
                             should_search['phone'] = constraint
                             must_match[predicate] = constraint

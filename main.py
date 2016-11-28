@@ -16,16 +16,19 @@ def main():
     query_path = "post_point_fact.json"
     answer_path = "answer.json"
     query_list = search.query_retrival(query_path)
-    f = open("parsed_queries","w")
+    # f = open("parsed_queries","w")
+    # for query in query_list:
+    #     json.dump(search.query_parse(query),f)
+    #     f.write("\n")
     # aggregate = filter(lambda k:k["type"] == "aggregate",query_list)
     # aggregate = filter(lambda k:k["id"] == "1223.11",aggregate)
     #global db
     # pool = Pool()
     # pool.map(pipeline,)
     for query in query_list:
-        if query["id"] == "107":
+        if query["id"] == "363":
             file_path = "QPR_pointfact/"+query["id"]
-            result = pipeline(query,False)
+            result = pipeline(query)
             f = open(file_path,"w")
             json.dump(result,f)
             f.close()
@@ -92,7 +95,7 @@ def TLD_specific_search(document):
     else:
         return ""
 
-def pipeline(query,tense):
+def pipeline(query,tense=True):
     #client = MongoClient()
     #db = client.database
     start = datetime.now()
@@ -101,7 +104,7 @@ def pipeline(query,tense):
         #print(query)
     # filepath = "pointfact_test/"+query["id"]
     parsed_query_dic = search.query_parse(query)
-    print(parsed_query_dic)
+    #print(parsed_query_dic)
     result = []
     if query["type"] == "Cluster Identification":
         result = cluster(query,5)
@@ -110,7 +113,7 @@ def pipeline(query,tense):
         #print(parsed_query_dic)
         #print(query_body)
         documents = search.elastic_search(query_body)
-        print(len(documents))
+        #print(len(documents))
         annotated_raw_contents = []
         annotated_clean_contents = []
         #is_fir_annotation = True #Indicator if it is the first time annotation for this query
@@ -156,8 +159,8 @@ def pipeline(query,tense):
                     dic["answer"] = answer
                     result.append(dic)
                 else:
-                    if not tense:
-                        return pipeline(query,True)
+                    if tense:
+                        return pipeline(query,False)
     final_result = generate_formal_answer(query,result)
     #final_result["timelog"] = (datetime.now()-start).seconds
     #answer_dic.append(final_result)
@@ -360,9 +363,10 @@ def generate_formal_answer(query,result):
                 candidates.append((answer_text,document_id,score))
         candidates.sort(key = lambda k:k[2],reverse = True)
         type_value = []
-        threhold = 0.5
+        threhold = 0
         if query["type"] == "Cluster Facet":
-            final_result["answers"] = filter(lambda k:k[2]>threhold,candidates)
+            #final_result["answers"] = filter(lambda k:k[2]>threhold,candidates)
+            final_result["answers"] = candidates
         else:
             if query["type"] == "MODE":
                 value_counter = collections.Counter(k[0] for k in candidates)
@@ -490,6 +494,9 @@ def validate(document, parsed_query,tense): # Need to write
                     else:
                         if location_field.lower() in lower_raw_content or location_field.lower() in lower_extract_text:
                             isValid = True
+            elif feature == "title" or feature == "content":
+                if matchword[feature] in re.sub("[^\s\w]","",lower_raw_content) or matchword[feature] in re.sub("[^\s\w]","",lower_extract_text):
+                    isValid = True
             else:
                 if feature == "ethnicity" and matchword[feature].lower() in extraction.continent_dic:
                     for country in extraction.continent_dic[matchword[feature].lower()]:
