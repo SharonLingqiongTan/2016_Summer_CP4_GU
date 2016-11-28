@@ -15,7 +15,7 @@ def main():
     query_path = "spql_self_built_query.json"
     query_list = search.query_retrival(query_path)
     aggregate = filter(lambda k:k["type"] == "aggregate",query_list)
-    aggregate = filter(lambda k:k["id"] == "1223.10",aggregate)
+    aggregate = filter(lambda k:k["id"] == "1223.11",aggregate)
     #global db
     # pool = Pool()
     # pool.map(pipeline,aggregate)

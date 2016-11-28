@@ -528,6 +528,8 @@ def hair_color_recognition(document,is_raw_content,is_position):
         return []
     normalized_color = ["blonde", "brown", "black", "red", "auburn", "chestnut", "gray", "white","dark"]
     color_dic = webcolors.CSS3_NAMES_TO_HEX
+    if "tan" in color_dic:
+        del color_dic["tan"]
     for color in normalized_color:
         if color not in color_dic:
             color_dic[color] = "1"
@@ -541,7 +543,7 @@ def hair_color_recognition(document,is_raw_content,is_position):
             eye_color = False
             # if is_position:
             #     position += text[position+4:].index(words[i])
-            for j in range(i+1,i+4): #look for color vocabulary after hair
+            for j in range(i+1,i+3): #look for color vocabulary after hair
                 if j<len(words):
                     if words[j].lower() in color_dic:
                         color_str = words[j].lower()
@@ -550,7 +552,7 @@ def hair_color_recognition(document,is_raw_content,is_position):
             if color_str:
                 if eye_color:
                     hair_color_str = ""
-                    for j in range(i-3,i):
+                    for j in range(i-2,i):
                         if words[j].lower() in color_dic:
                             hair_color_str = words[j].lower()
                     if hair_color_str:
@@ -570,7 +572,7 @@ def hair_color_recognition(document,is_raw_content,is_position):
                         text_result.append(color_str)
             else:
                 hair_color_str = ""
-                for j in range(i-3,i):
+                for j in range(i-2,i):
                     if words[j].lower() in color_dic:
                         hair_color_str = words[j].lower()
                 if hair_color_str:
@@ -590,6 +592,8 @@ def eye_color_recognition(document,is_raw_content,is_position):
         return []
     normalized_color = ["blue", "brown", "green", "hazel", "gray", "amber"]
     color_dic = webcolors.CSS3_NAMES_TO_HEX
+    if "tan" in color_dic:
+        del color_dic["tan"]
     for color in normalized_color:
         if color not in color_dic:
             color_dic[color] = "1"
@@ -603,7 +607,7 @@ def eye_color_recognition(document,is_raw_content,is_position):
             hair_color = False
             # if is_position:
             #     position += text[position+4:].index(words[i])
-            for j in range(i+1,min(len(words),i+4)): #look for color vocabulary after eyes
+            for j in range(i+1,min(len(words),i+3)): #look for color vocabulary after eyes
                 if words[j].lower() in color_dic:
                     color_str = words[j].lower()
                 if words[i].lower() == "hair": #check if eyes color is around
@@ -611,7 +615,7 @@ def eye_color_recognition(document,is_raw_content,is_position):
             if color_str:
                 if hair_color:
                     eye_color_str = ""
-                    for j in range(i-3,i):
+                    for j in range(i-2,i):
                         if words[j].lower() in color_dic:
                             eye_color_str = words[j].lower()
                     if eye_color_str:
@@ -631,7 +635,7 @@ def eye_color_recognition(document,is_raw_content,is_position):
                         text_result.append(color_str)
             else:
                 eye_color_str = ""
-                for j in range(i-3,i):
+                for j in range(i-2,i):
                     if words[j].lower() in color_dic:
                         eye_color_str = words[j].lower()
                 if eye_color_str:
@@ -658,14 +662,14 @@ def services_recognition(document,is_raw_content,is_position):
         pattern = r"(?i)\W"+service+"\W"
         if is_position:
             for item in re.finditer(pattern,text):
-                result.append((item.start()*1.0/len(text),"".join(item.groups())))
+                result.append((item.start()*1.0/len(text),service))
         else:
-            if service.lower() in text:
-                result.append(service.lower())
+            if re.search(pattern,text):
+                result.append(service)
     return result
 
-def tattoo_recognition(document,is_raw_content,is_position):
-    return ""
+def tattoos_recognition(document,is_raw_content,is_position):
+    return []
 
 def multi_providers(document,is_raw_content,is_position):
     return number_of_individuals_recognition(document,is_raw_content,is_position)
@@ -775,6 +779,7 @@ def posting_date_recognition(document,is_raw_content,is_position):
     year_month_day = "("+year+conjunction+month+conjunction+day+")"
     digit_date_pattern = month_day_year+"|"+day_month_year+"|"+year_month_day
     digit_date_pattern_result = re.findall(digit_date_pattern,text)
+    digit_month = {1:"January",2:"February",3:"March",4:"April",5:"May",6:"June",7:"July",8:"August",9:"September",10:"October",11:"November",12:"December"}
     result = []
     for item in digit_date_pattern_result:
         dic = {}
@@ -791,8 +796,11 @@ def posting_date_recognition(document,is_raw_content,is_position):
             dic["month"] = item[10]
             dic["day"] = item[11]
         if len(dic)>0:
-            date_int = int(dic["year"])*(10**4)+int(dic["month"])*(10**2)+int(dic["day"])
-            result.append(date_int)
+            date_str = digit_month[dic["month"]]+" "+dic["day"]+", "+ dic["year"]
+            if is_position:
+                result.append((0.5,date_str))
+            else:
+                result.append(date_str)
 
     #str_digit pattern like Jan 8th 2001
     month_str = r"(?i)(January|Jan|February|Feb|March|Mar|April|Apr|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|December|Dec)"
@@ -805,7 +813,7 @@ def posting_date_recognition(document,is_raw_content,is_position):
     for item in str_date_pattern_result:
         dic = {}
         if item[0]:
-            dic["month"] = month_dic[item[1].lower()]
+            dic["month"] = item[1]
             dic["day"] = re.sub("[A-Za-z]","",item[2])
             dic["year"] = item[3]
         else:
@@ -813,8 +821,11 @@ def posting_date_recognition(document,is_raw_content,is_position):
             dic["day"] = re.sub("[A-Za-z]","",item[5])
             dic["year"] = item[7]
         if len(dic)>0:
-            date_int = int(dic["year"])*(10**4)+int(dic["month"])*(10**2)+int(dic["day"])
-            result.append(date_int)
+            date_str = dic["day"]+" "+dic["month"].capitalize()+", "+dic["year"]
+            if is_position:
+                result.append((0.5,date_str))
+            else:
+                result.append(date)
             
     #relative date pattern like 10 months ago, more than a week a ago
     # number_str = r"((?i)(?:[1-3]?[0-9])|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)"
@@ -1123,7 +1134,7 @@ def color_recognition(document,is_raw_content):
 
 if __name__ != "__main__":
     global functionDic
-    functionDic = {"post_date":posting_date_recognition,"tattoos":tattoo_recognition,"street_address": address_recognition,"age":age_recognition,
+    functionDic = {"post_date":posting_date_recognition,"tattoos":tattoos_recognition,"street_address": address_recognition,"age":age_recognition,
                    "name":name_recognition, "hair_color":hair_color_recognition,"eye_color":eye_color_recognition,"nationality":nationality_recognition,
                    "ethnicity":ethnicity_recognition,"review_site":review_site_recognition,"email": email_recognition,"phone": phone_recognition,
                    "location":location_recognition,"price":price_recognition,"multiple_providers": number_of_individuals_recognition,
