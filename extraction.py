@@ -935,6 +935,12 @@ def posting_date_recognition(document,is_raw_content,is_position):
     #     result.append(dic)
     return result
 
+def title_recognition(document,is_raw_content,is_position):
+    return []
+
+def content_recognition(document,is_raw_content,is_position):
+    return []
+
 def top_level_domain_pattern(document):
     path = "TLD_list.txt"
     parentUrl = document["_source"]["url"]
@@ -1019,16 +1025,6 @@ def review_id_recognition(document,is_raw_content):
     review_id = re.findall(pattern, url)
     return review_id
 
-def title_recognition(document,is_raw_content):
-    result = []
-    if "extractions" in document["_source"]:
-        crawl_extractions = document["_source"]["extractions"]
-        if "title" in crawl_extractions:
-            if "results" in crawl_extractions["title"]:
-                result = crawl_extractions["title"]["results"][:]
-                for i in range(len(result)):
-                    result[i] = result_normalize(result[i])
-    return result
 
 def business_recognition(document,is_raw_content):
     text = get_text(document)
@@ -1138,7 +1134,7 @@ if __name__ != "__main__":
     functionDic = {"post_date":posting_date_recognition,"tattoos":tattoos_recognition,"street_address": address_recognition,"age":age_recognition,
                    "name":name_recognition, "hair_color":hair_color_recognition,"eye_color":eye_color_recognition,"nationality":nationality_recognition,
                    "ethnicity":ethnicity_recognition,"review_site_id":review_site_id_recognition,"email": email_recognition,"phone": phone_recognition,
-                   "location":location_recognition,"price":price_recognition,"multiple_providers": number_of_individuals_recognition,
+                   "location":location_recognition,"price":price_recognition,"multiple_providers": multi_providers,"title":title_recognition,"content":content_recognition,
                     "social_media_id":social_media_id_recognition,"services":services_recognition,"height":height_recognition,"weight":weight_recognition
                    }
     global feature_list
@@ -1175,6 +1171,7 @@ if __name__ != "__main__":
     country_abbr_path = "./resource/country_abbr"
     f = open(country_abbr_path)
     line = f.readlines()[0]
+    f.close()
     country_abbr_list = yaml.load(line)
 
     global state_abbr_dic
@@ -1182,4 +1179,10 @@ if __name__ != "__main__":
     w = open(state_abbr_path)
     state_abbr_dic = json.load(w)
     w.close()
+
+    global continent_dic
+    continent_dic_path = "nation_continent.txt"
+    f = open(continent_dic_path)
+    continent_dic = yaml.load(f)
+    f.close()
 

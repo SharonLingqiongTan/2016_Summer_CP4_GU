@@ -163,7 +163,10 @@ def query_parse(query):  # input query - json
                     if constraint in skin_color_list:
                         should_search['ethnicity'] = constraint
                     else:
-                        must_search['ethnicity'] = constraint
+                        if constraint.lower() not in extraction.continent_dic:
+                            must_search['ethnicity'] = constraint
+                        else:
+                            should_search["ethnicity"] = constraint
                     must_match[predicate] = constraint
                 # search directly
                 elif predicate == 'phone':
@@ -206,8 +209,6 @@ def query_parse(query):  # input query - json
                         must_search["height"] = he[0]+"'"+he[1]+"\""
                 # cluster query
                 elif predicate == 'seed':
-                    if query["type"] in ["Mode","AVG","MAX","MIN"]:
-
                     if "@" in constraint:
                         must_search['email'] = constraint
                         must_match['email'] = constraint
@@ -235,7 +236,10 @@ def query_parse(query):  # input query - json
         if line.startswith("FILTER"):
             filterPattern = "\".*?\""
             filter_constraint = re.findall(filterPattern, line)
-            filter_condition['filter'] = filter_constraint
+            if "content" in line:
+                must_search["content"] = filter_constraint
+            elif "title" in line:
+                must_search["title"] = filter_constraint
 
 
     parsed_dic["type"] = query["type"]
@@ -246,7 +250,6 @@ def query_parse(query):  # input query - json
     parsed_dic['required_match_field'] = must_match
     parsed_dic['optional_match_field'] = should_match
     parsed_dic['group'] = group
-    parsed_dic['filter_condition'] = filter_condition
     return parsed_dic
 
 
@@ -307,8 +310,9 @@ def query_body_build(parsed_query):
         query_dic["match"] = {}
         query_dic["match"]["extracted_text"] = word
         should_arr.append(query_dic)
-    if parsed_query["type"] == "cluster":
     size = 3000
+    if parsed_query["type"] == "Cluster Identification":
+        size = 500
     body = {"size":size,"query":{"bool":{"must":{"match":{"extracted_text": must_str}}, "must_not":[{"match": {"extracted_text": must_not_str}},{"match": {"raw_content": must_not_str}}], "should": should_arr}}}
     return body
 

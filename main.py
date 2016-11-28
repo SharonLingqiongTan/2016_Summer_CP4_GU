@@ -16,13 +16,13 @@ def main():
     query_path = "spql_self_built_query.json"
     answer_path = "answer.json"
     query_list = search.query_retrival(query_path)
-    aggregate = filter(lambda k:k["type"] == "aggregate",query_list)
-    aggregate = filter(lambda k:k["id"] == "1223.11",aggregate)
+    # aggregate = filter(lambda k:k["type"] == "aggregate",query_list)
+    # aggregate = filter(lambda k:k["id"] == "1223.11",aggregate)
     #global db
     # pool = Pool()
     # pool.map(pipeline,aggregate)
     result = []
-    for query in aggregate:
+    for query in query_list:
         result.append(pipeline(query,False))
     f = open(answer_path,"w")
     json.dump(result,f)
@@ -489,8 +489,13 @@ def validate(document, parsed_query,tense): # Need to write
                         if location_field.lower() in lower_raw_content or location_field.lower() in lower_extract_text:
                             isValid = True
             else:
-                if matchword[feature].lower() in lower_raw_content or matchword[feature].lower() in lower_extract_text:
-                    isValid = True
+                if feature == "ethnicity" and matchword[feature].lower() in extraction.continent_dic:
+                    for country in extraction.continent_dic[matchword[feature].lower()]:
+                        if country.lower() in lower_raw_content or country.lower() in lower_extract_text:
+                            isValid = True
+                else:
+                    if matchword[feature].lower() in lower_raw_content or matchword[feature].lower() in lower_extract_text:
+                        isValid = True
         if isValid:
             validate_count += 1
             continue
