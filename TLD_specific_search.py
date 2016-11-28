@@ -1,10 +1,10 @@
-from extraction import top_level_domain_recognition
+from extraction import top_level_domain_pattern
 from bs4 import BeautifulSoup
 import re
 #input: document, is_raw_content
 
 def TLD_specific_search(document, is_raw_content):
-	TLD = top_level_domain_recognition(document, is_raw_content)
+	TLD = top_level_domain_pattern(document, is_raw_content)
 	raw_content = document["raw_content"]
 	# raw_content = document
 	if TLD and raw_content:

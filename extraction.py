@@ -133,6 +133,17 @@ def email_recognition(document,is_raw_content,is_position):
         for email in text_result:
             if not email[0].startswith('//'):
                 result.append(email[0].lower())
+	TLD = top_level_domain_recognition(document, is_raw_content)
+	if TLD:
+		cleaned_TLD = TLD.split('.')[0]
+		i = 0
+		length = len(result)
+		while i < length:
+			if cleaned_TLD in result[i][:result[i].index('@')]:
+				del result[i]
+				length -= 1
+			else:
+				i += 1            
     return result
 
 def address_recognition(document,is_raw_content,is_position):
@@ -451,7 +462,7 @@ def price_recognition(document,is_raw_content,is_position):
     # priceDict = collections.OrderedDict()
     priceDict = {}
     currency = ["$", "€", "¥", "£", "$", "Fr", "¥", "kr", "Ꝑ", "ք", "₩", "R", "R$", "₺", "₹"]
-    pre_price_indicator = ["Hour:", "night:", "price:", "Price:", "Hourly", "H/H", "H", "special", "Special", "price", "Price", "$", "€", "¥", "£", "Fr", "kr", "Ꝑ"]
+    pre_price_indicator = ["Hour:", "night:", "price:", "Price:", "Hourly", "H/H", "H", "special", "Special", "price", "Price", "$", "€", "¥", "£", "Fr", "kr", "Ꝑ", "Rate", "rate"]
     post_price_indicator = ["dollar", "dollars", "jewel", "jewels", "rose", "roses", "/hour", "/Hour", "/HOUR", "/night", "/Night", "/NIGHT", "$", "H/H", "H", "AM", "PM", "all", "include", "All", "Include"]
     time1 = "(\d)(\d)?((AM)|(PM))(-)(-)?(\d)(\d)?((AM)|(PM))"
     time2 = "(\d)(\d)?((AM)|(PM))(to)(\d)(\d)?((AM)|(PM))"
@@ -1043,7 +1054,7 @@ def multiple_phone_recognition(document,is_raw_content):
     result = phone_recognition(document,is_raw_content)
     return list(set(result))
 
-def top_level_domain_recognition(document,is_raw_conent):
+def top_level_domain_pattern(document,is_raw_conent):
     path = "/Users/Sharon/Desktop/georgetown/2016_Summer_CP4_GU/TLD_list.txt"
     parentUrl = document["_source"]["url"]
     findTLD = False
@@ -1058,17 +1069,21 @@ def top_level_domain_recognition(document,is_raw_conent):
                 break
             else:
                 continue
-        # if findTLD == False:
-        #     if parentUrl.startswith("http://"):
-        #         url = parentUrl[len("http://"):]
-        #     elif parentUrl.startswith("https://"):
-        #         url = parentUrl[len("https://")]
-        #     else:
-        #         url = parentUrl
-        #     url = url[:url.find("/")]
-        #     url_parts = url.split(".")
-        #     TLD = url_parts[-2] + "." + url_parts[-1]
-        #     result.append(TLD)
+    return result
+
+def top_level_domain_recognition(document,is_raw_conent):
+    parentUrl = document["_source"]["url"]
+    result = []
+	if parentUrl.startswith("http://"):
+		url = parentUrl[len("http://"):]
+	elif parentUrl.startswith("https://"):
+		url = parentUrl[len("https://")]
+	else:
+		url = parentUrl
+	url = url[:url.find("/")]
+	url_parts = url.split(".")
+	TLD = url_parts[-2] + "." + url_parts[-1]
+	result.append(TLD)
     return result
 
 def image_with_phone_recognition(document):
