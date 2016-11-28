@@ -180,6 +180,7 @@ def query_parse(query):  # input query - json
                 elif predicate == 'phone':
                     should_search['phone'] = constraint
                     must_match[predicate] = constraint
+                    must_search[predicate] = constraint
                 elif predicate == 'location':
                     location = constraint.split(',')
                     if location:
@@ -192,10 +193,11 @@ def query_parse(query):  # input query - json
                                     must_search['location'] = location[0]+' AND '+country
                                 else:
                                     must_search['location'] = location[0]
+                            else: #city
+                                must_search["location"] = constraint
                         else:
                             must_search['location'] = location[0]
                         must_match['location'] = constraint
-
                 # elif predicate = 'tatoos':
                 elif predicate == 'multiple_providers':
                     should_search['multiple_providers'] = constraint
@@ -213,8 +215,10 @@ def query_parse(query):  # input query - json
                     if len(he) == 1:
                         must_search["height"] = he[0]+"'"
                         should_search["height"] = he[0]+"\""
+                        must_match["height"] = he[0]+"'"
                     elif len(he) == 2:
                         must_search["height"] = he[0]+"'"+he[1]+"\""
+                        must_match["height"] = he[0]+"'"+he[1]+"\""
                 # cluster query
                 elif predicate == 'seed':
                     if "@" in constraint:
