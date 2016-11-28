@@ -541,7 +541,7 @@ def hair_color_recognition(document,is_raw_content,is_position):
             eye_color = False
             # if is_position:
             #     position += text[position+4:].index(words[i])
-            for j in range(i+1,i+6): #look for color vocabulary after hair
+            for j in range(i+1,i+4): #look for color vocabulary after hair
                 if j<len(words):
                     if words[j].lower() in color_dic:
                         color_str = words[j].lower()
@@ -550,7 +550,7 @@ def hair_color_recognition(document,is_raw_content,is_position):
             if color_str:
                 if eye_color:
                     hair_color_str = ""
-                    for j in range(i-5,i):
+                    for j in range(i-3,i):
                         if words[j].lower() in color_dic:
                             hair_color_str = words[j].lower()
                     if hair_color_str:
@@ -570,7 +570,7 @@ def hair_color_recognition(document,is_raw_content,is_position):
                         text_result.append(color_str)
             else:
                 hair_color_str = ""
-                for j in range(i-5,i):
+                for j in range(i-3,i):
                     if words[j].lower() in color_dic:
                         hair_color_str = words[j].lower()
                 if hair_color_str:
@@ -603,15 +603,15 @@ def eye_color_recognition(document,is_raw_content,is_position):
             hair_color = False
             # if is_position:
             #     position += text[position+4:].index(words[i])
-            for j in range(i+1,min(len(words),i+8)): #look for color vocabulary after eyes
+            for j in range(i+1,min(len(words),i+4)): #look for color vocabulary after eyes
                 if words[j].lower() in color_dic:
                     color_str = words[j].lower()
-                if fuzz.ratio(words[j].lower(),"hair")>=75: #check if eyes color is around
+                if words[i].lower() == "hair": #check if eyes color is around
                     hair_color = True
             if color_str:
                 if hair_color:
                     eye_color_str = ""
-                    for j in range(i-5,i):
+                    for j in range(i-3,i):
                         if words[j].lower() in color_dic:
                             eye_color_str = words[j].lower()
                     if eye_color_str:
@@ -631,7 +631,7 @@ def eye_color_recognition(document,is_raw_content,is_position):
                         text_result.append(color_str)
             else:
                 eye_color_str = ""
-                for j in range(i-5,i):
+                for j in range(i-3,i):
                     if words[j].lower() in color_dic:
                         eye_color_str = words[j].lower()
                 if eye_color_str:
