@@ -151,7 +151,7 @@ def query_parse(query):  # input query - json
         if line.startswith('PREFIX'):
             continue
         if line.startswith('SELECT'):
-            pattern = "\?([A-Za-z]+)"
+            pattern = "\?([A-Za-z_]+)"
             fields = re.findall(pattern,line)
             if len(fields) == 2:
                 for item in fields:
@@ -178,9 +178,20 @@ def query_parse(query):  # input query - json
                     must_match[predicate] = constraint
                 # search directly
                 elif predicate == 'phone':
-                    should_search['phone'] = constraint
-                    must_match[predicate] = constraint
-                    must_search[predicate] = constraint
+                    words = query["question"].split()
+                    if "number" in words:
+                        number_index = words.index("number")+1
+                        if number_index < len(words) and re.findall("\d",words[number_index]):
+                            phone = ""
+                            while len(re.findall("\d",phone))<8:
+                                phone += words[number_index]+" "
+                                number_index += 1
+                            must_search["phone"] = re.sub(r"[^\d\(\)-\+ ]","",phone.strip())
+                            must_match["phone"] = re.sub(r"[^\d\(\)-\+ ]","",phone.strip())
+                        else:
+                            should_search['phone'] = constraint
+                            must_match[predicate] = constraint
+                            must_search[predicate] = constraint
                 elif predicate == 'location':
                     location = constraint.split(',')
                     if location:
@@ -219,6 +230,9 @@ def query_parse(query):  # input query - json
                     elif len(he) == 2:
                         must_search["height"] = he[0]+"'"+he[1]+"\""
                         must_match["height"] = he[0]+"'"+he[1]+"\""
+                elif predicate == "post_date":
+                    should_search["post_date"] = constraint
+                    must_match["post_date"] = constraint
                 # cluster query
                 elif predicate == 'seed':
                     if "@" in constraint:
@@ -252,8 +266,10 @@ def query_parse(query):  # input query - json
                 filter_constraint = filter_constraint[0]
             if "content" in line:
                 must_search["content"] = filter_constraint
+                must_match["content"] = filter_constraint
             elif "title" in line:
                 must_search["title"] = filter_constraint
+                must_match["title"] = filter_constraint
 
 
     parsed_dic["type"] = query["type"]
@@ -339,7 +355,7 @@ def elastic_search(query_body):
     #     verify_certs = True,
     #     ca_certs=certifi.where(),
     # )
-    es = Elasticsearch(hosts = [{"host":'search-memex-7kthxwtfdr3yvzrdpjlcwordou.us-east-1.es.amazonaws.com',"port":80}],connection_class= RequestsHttpConnection)
+    es = Elasticsearch(['search-memex-7kthxwtfdr3yvzrdpjlcwordou.us-east-1.es.amazonaws.com:80/gt',],connection_class= RequestsHttpConnection)
     #es = Elasticsearch()
     response = es.search(body=query_body,request_timeout=60)
     documents = response["hits"]["hits"]

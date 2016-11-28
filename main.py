@@ -17,20 +17,18 @@ def main():
     answer_path = "answer.json"
     query_list = search.query_retrival(query_path)
     f = open("parsed_queries","w")
-    for query in query_list:
-        parsed_dic = search.query_parse(query)
-        json.dump(parsed_dic,f)
-        f.write("\n")
     # aggregate = filter(lambda k:k["type"] == "aggregate",query_list)
     # aggregate = filter(lambda k:k["id"] == "1223.11",aggregate)
     #global db
     # pool = Pool()
-    # pool.map(pipeline,aggregate)
-    # result = []
-    # for query in query_list:
-    #     result.append(pipeline(query,False))
-    # f = open(answer_path,"w")
-    # json.dump(result,f)
+    # pool.map(pipeline,)
+    for query in query_list:
+        if query["id"] == "107":
+            file_path = "QPR_pointfact/"+query["id"]
+            result = pipeline(query,False)
+            f = open(file_path,"w")
+            json.dump(result,f)
+            f.close()
 
 def createIndex(index,type,es,doc):
     malpath = "mal.json"
@@ -62,40 +60,37 @@ def index(index_name):
     print((datetime.now()-start).seconds)
 
 def TLD_specific_search(document):
-	TLD = extraction.top_level_domain_pattern(document)
-	raw_content = document["raw_content"]
-	# raw_content = document
-	if TLD and raw_content:
-		soup = BeautifulSoup(raw_content, 'html.parser')
-		if TLD == "escortcafe.com":
-			content = soup.find_all("div", class_="details")
-	# print type(content)
-	# print re.findall('Blonde', content)
-		elif TLD == "classifriedads.com":
-			content = soup.find_all(id="contentcell")
-		elif TLD == "slixa.com":
-			content = soup.find_all("div", class_="span9 profile-content") + soup.find_all("aside", class_="profile-sidebar span3")
-		# elif TLD == "allsexyescort.com":
-		elif TLD == "escort-ads.com":
-			content = soup.findall("div", class_="container main-content vip-content")
-		# elif TLD == "liveescortreviews.com":
-		# elif TLD == "escort-europe.com":
-		elif TLD == "find-escorts.com":
-			content = soup.findall(id="contentcell")
-		elif TLD == "escortserv.com":
-			content = soup.findall(id="index")
-		elif TLD == "slixa.ca":
-			content = soup.find_all("div", class_="span9 profile-content") + soup.find_all("aside", class_="profile-sidebar span3")
-		elif TLD == "escortpost.com":
-			content = soup.findall(id="content")
-		elif TLD == "privateescorts.ro":
-			content = soup.findall("tbody")
-		elif TLD == "adultsearch.com":
-			content = soup.findall(id="ad")
-
-		return str(content)
-	else:
-			return ""
+    TLD = extraction.top_level_domain_pattern(document)
+    raw_content = extraction.get_raw_content(document)
+    if TLD and raw_content:
+        soup = BeautifulSoup(raw_content, 'html.parser')
+        content = ""
+        if TLD == "escortcafe.com":
+            content = soup.find_all("div", class_="details")
+        elif TLD == "classifriedads.com":
+            content = soup.find_all(id="contentcell")
+        elif TLD == "slixa.com":
+            content = soup.find_all("div", class_="span9 profile-content") + soup.find_all("aside", class_="profile-sidebar span3")
+        # elif TLD == "allsexyescort.com":
+        elif TLD == "escort-ads.com":
+            content = soup.findall("div", class_="container main-content vip-content")
+        # elif TLD == "liveescortreviews.com":
+        # elif TLD == "escort-europe.com":
+        elif TLD == "find-escorts.com":
+            content = soup.findall(id="contentcell")
+        elif TLD == "escortserv.com":
+            content = soup.findall(id="index")
+        elif TLD == "slixa.ca":
+            content = soup.find_all("div", class_="span9 profile-content") + soup.find_all("aside", class_="profile-sidebar span3")
+        elif TLD == "escortpost.com":
+            content = soup.findall(id="content")
+        elif TLD == "privateescorts.ro":
+            content = soup.findall("tbody")
+        elif TLD == "adultsearch.com":
+            content = soup.findall(id="ad")
+        return str(content)
+    else:
+        return ""
 
 def pipeline(query,tense):
     #client = MongoClient()
@@ -106,6 +101,7 @@ def pipeline(query,tense):
         #print(query)
     # filepath = "pointfact_test/"+query["id"]
     parsed_query_dic = search.query_parse(query)
+    print(parsed_query_dic)
     result = []
     if query["type"] == "Cluster Identification":
         result = cluster(query,5)
@@ -114,7 +110,7 @@ def pipeline(query,tense):
         #print(parsed_query_dic)
         #print(query_body)
         documents = search.elastic_search(query_body)
-        #print(len(documents))
+        print(len(documents))
         annotated_raw_contents = []
         annotated_clean_contents = []
         #is_fir_annotation = True #Indicator if it is the first time annotation for this query
